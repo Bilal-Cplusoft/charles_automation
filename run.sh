@@ -6,7 +6,7 @@ readonly IMAGE_NAME="sports-squares-ui:latest"
 readonly CONTAINER_NAME="sports-squares-ui"
 
 readonly ENV_FILE="${SCRIPT_DIR}/.env"
-readonly HOST_PORT="${APP_PORT:-8501}"
+readonly HOST_PORT="${APP_PORT:-9000}"
 
 container_exists() {
   docker container inspect "${CONTAINER_NAME}" >/dev/null 2>&1
@@ -69,7 +69,7 @@ docker run --detach \
   --name "${CONTAINER_NAME}" \
   --restart unless-stopped \
   --env-file "${ENV_FILE}" \
-  --publish "${HOST_PORT}:8501" \
+  --publish "${HOST_PORT}:9000" \
   --volume "${SCRIPT_DIR}:/app" \
   "${IMAGE_NAME}" >/dev/null
 
