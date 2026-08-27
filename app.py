@@ -505,60 +505,21 @@ if submit:
 
         payout_merge_reqs = []
 
-        if grid_format in ["4_spot", "5_spot", "10_spot"] or sport in ["nba", "wnba"]:
+        if sport == "mlb":
+            if grid_format in ["4_spot", "5_spot", "10_spot"]:
+                mlb_5inn = payout_half
+                mlb_final = payout_final
+            else:
+                mlb_5inn = int(total_pot * 0.20)
+                mlb_final = int(total_pot * 0.40)
+
             updates.extend([
                 {"range": "C13", "values": [["PAYOUTS"]]},
-                {"range": "E13", "values": [["HALFTIME"]]},
-                {"range": "G13", "values": [[f"${payout_half}"]]},
-                {"range": "I13", "values": [["FINAL"]]},
-                {"range": "K13", "values": [[f"${payout_final}"]]},
+                {"range": "E13", "values": [[f"Score After 5 Inn: ${mlb_5inn}"]]},
+                {"range": "I13", "values": [[f"Final R+H+E: ${mlb_final}"]]},
                 {"range": "S13", "values": [["PAYOUTS"]]},
-                {"range": "U13", "values": [["HALFTIME"]]},
-                {"range": "W13", "values": [[f"${payout_half}"]]},
-                {"range": "Y13", "values": [["FINAL"]]},
-                {"range": "AA13", "values": [[f"${payout_final}"]]},
-            ])
-            payout_merge_reqs.extend([
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 2, "endColumnIndex": 4}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 4, "endColumnIndex": 6}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 6, "endColumnIndex": 8}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 8, "endColumnIndex": 10}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 10, "endColumnIndex": 12}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 18, "endColumnIndex": 20}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 20, "endColumnIndex": 22}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 22, "endColumnIndex": 24}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 24, "endColumnIndex": 26}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 26, "endColumnIndex": 28}, "mergeType": "MERGE_ALL"}},
-            ])
-        elif sport == "nfl":
-            updates.extend([
-                {"range": "C13", "values": [["PAYOUTS"]]},
-                {"range": "E13", "values": [[f"Q1 ${payout_q1}"]]},
-                {"range": "G13", "values": [[f"HT ${payout_q1}"]]},
-                {"range": "I13", "values": [[f"Q3 ${payout_q1}"]]},
-                {"range": "K13", "values": [[f"FINAL ${int(total_pot * 0.40)}"]]},
-                {"range": "E14", "values": [[f"Rev ${payout_rev}"]]},
-                {"range": "G14", "values": [[f"Rev ${payout_rev}"]]},
-                {"range": "I14", "values": [[f"Rev ${payout_rev}"]]},
-                {"range": "K14", "values": [[f"Rev ${int(payout_rev * 1.5)}"]]},
-                {"range": "S13", "values": [["PAYOUTS"]]},
-                {"range": "U13", "values": [[f"Q1 ${payout_q1}"]]},
-                {"range": "W13", "values": [[f"HT ${payout_q1}"]]},
-                {"range": "Y13", "values": [[f"Q3 ${payout_q1}"]]},
-                {"range": "AA13", "values": [[f"FINAL ${int(total_pot * 0.40)}"]]},
-                {"range": "U14", "values": [[f"Rev ${payout_rev}"]]},
-                {"range": "W14", "values": [[f"Rev ${payout_rev}"]]},
-                {"range": "Y14", "values": [[f"Rev ${payout_rev}"]]},
-                {"range": "AA14", "values": [[f"Rev ${int(payout_rev * 1.5)}"]]},
-            ])
-        elif sport == "mlb":
-            updates.extend([
-                {"range": "C13", "values": [["PAYOUTS"]]},
-                {"range": "E13", "values": [[f"Score After 5 Inn: ${payout_half}"]]},
-                {"range": "I13", "values": [[f"Final R+H+E: ${payout_final}"]]},
-                {"range": "S13", "values": [["PAYOUTS"]]},
-                {"range": "U13", "values": [[f"Score After 5 Inn: ${payout_half}"]]},
-                {"range": "Y13", "values": [[f"Final R+H+E: ${payout_final}"]]},
+                {"range": "U13", "values": [[f"Score After 5 Inn: ${mlb_5inn}"]]},
+                {"range": "Y13", "values": [[f"Final R+H+E: ${mlb_final}"]]},
             ])
             payout_merge_reqs.extend([
                 {
@@ -609,6 +570,52 @@ if submit:
                         "mergeType": "MERGE_ALL"
                     }
                 }
+            ])
+        elif grid_format in ["4_spot", "5_spot", "10_spot"] or sport in ["nba", "wnba"]:
+            updates.extend([
+                {"range": "C13", "values": [["PAYOUTS"]]},
+                {"range": "E13", "values": [["HALFTIME"]]},
+                {"range": "G13", "values": [[f"${payout_half}"]]},
+                {"range": "I13", "values": [["FINAL"]]},
+                {"range": "K13", "values": [[f"${payout_final}"]]},
+                {"range": "S13", "values": [["PAYOUTS"]]},
+                {"range": "U13", "values": [["HALFTIME"]]},
+                {"range": "W13", "values": [[f"${payout_half}"]]},
+                {"range": "Y13", "values": [["FINAL"]]},
+                {"range": "AA13", "values": [[f"${payout_final}"]]},
+            ])
+            payout_merge_reqs.extend([
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 2, "endColumnIndex": 4}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 4, "endColumnIndex": 6}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 6, "endColumnIndex": 8}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 8, "endColumnIndex": 10}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 10, "endColumnIndex": 12}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 18, "endColumnIndex": 20}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 20, "endColumnIndex": 22}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 22, "endColumnIndex": 24}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 24, "endColumnIndex": 26}, "mergeType": "MERGE_ALL"}},
+                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 13, "startColumnIndex": 26, "endColumnIndex": 28}, "mergeType": "MERGE_ALL"}},
+            ])
+        elif sport == "nfl":
+            updates.extend([
+                {"range": "C13", "values": [["PAYOUTS"]]},
+                {"range": "E13", "values": [[f"Q1 ${payout_q1}"]]},
+                {"range": "G13", "values": [[f"HT ${payout_q1}"]]},
+                {"range": "I13", "values": [[f"Q3 ${payout_q1}"]]},
+                {"range": "K13", "values": [[f"FINAL ${int(total_pot * 0.40)}"]]},
+                {"range": "E14", "values": [[f"Rev ${payout_rev}"]]},
+                {"range": "G14", "values": [[f"Rev ${payout_rev}"]]},
+                {"range": "I14", "values": [[f"Rev ${payout_rev}"]]},
+                {"range": "K14", "values": [[f"Rev ${int(payout_rev * 1.5)}"]]},
+                {"range": "S13", "values": [["PAYOUTS"]]},
+                {"range": "U13", "values": [[f"Q1 ${payout_q1}"]]},
+                {"range": "W13", "values": [[f"HT ${payout_q1}"]]},
+                {"range": "Y13", "values": [[f"Q3 ${payout_q1}"]]},
+                {"range": "AA13", "values": [[f"FINAL ${int(total_pot * 0.40)}"]]},
+                {"range": "U14", "values": [[f"Rev ${payout_rev}"]]},
+                {"range": "W14", "values": [[f"Rev ${payout_rev}"]]},
+                {"range": "Y14", "values": [[f"Rev ${payout_rev}"]]},
+                {"range": "AA14", "values": [[f"Rev ${int(payout_rev * 1.5)}"]]},
             ])
         elif sport == "wc":
             updates.extend([
