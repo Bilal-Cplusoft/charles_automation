@@ -342,9 +342,67 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
                     })
                     updates.append({"range": gspread.utils.rowcol_to_a1(r1+1, c1_r+1), "values": [["Bankrupt"]]})
 
-    elif grid_format in ["10_spot", "5_spot"]:
-        # Keep 10 columns unmerged so vertical lines aligned under top digits 0-9 remain intact
-        pass
+    elif grid_format == "10_spot":
+        for i in range(10):
+            c1 = 2 + i
+            c2 = c1 + 1
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": 2,
+                        "endRowIndex": 12,
+                        "startColumnIndex": c1,
+                        "endColumnIndex": c2
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+            c1_r = 18 + i
+            c2_r = c1_r + 1
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": 2,
+                        "endRowIndex": 12,
+                        "startColumnIndex": c1_r,
+                        "endColumnIndex": c2_r
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+
+    elif grid_format == "5_spot":
+        for i in range(5):
+            c1 = 2 + i * 2
+            c2 = c1 + 2
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": 2,
+                        "endRowIndex": 12,
+                        "startColumnIndex": c1,
+                        "endColumnIndex": c2
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+            c1_r = 18 + i * 2
+            c2_r = c1_r + 2
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": 2,
+                        "endRowIndex": 12,
+                        "startColumnIndex": c1_r,
+                        "endColumnIndex": c2_r
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
 
     elif grid_format == "50_spot":
         for r_i in range(10):
