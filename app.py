@@ -73,265 +73,64 @@ LEAGUE_LOGOS = {
 
 def generate_spot_grid_requests(grid_format, new_sheet_id):
     reqs = []
-    white_rgb = {"red": 1.0, "green": 1.0, "blue": 1.0}
-    black_rgb = {"red": 0.0, "green": 0.0, "blue": 0.0}
-
-    reqs.append({
-        "unmergeCells": {
-            "range": {
-                "sheetId": new_sheet_id,
-                "startRowIndex": 1,
-                "endRowIndex": 13,
-                "startColumnIndex": 2,
-                "endColumnIndex": 12
-            }
-        }
-    })
-    reqs.append({
-        "unmergeCells": {
-            "range": {
-                "sheetId": new_sheet_id,
-                "startRowIndex": 1,
-                "endRowIndex": 13,
-                "startColumnIndex": 18,
-                "endColumnIndex": 28
-            }
-        }
-    })
-
-    reqs.append({
-        "repeatCell": {
-            "range": {
-                "sheetId": new_sheet_id,
-                "startRowIndex": 2,
-                "endRowIndex": 12,
-                "startColumnIndex": 2,
-                "endColumnIndex": 12
-            },
-            "cell": {
-                "userEnteredFormat": {
-                    "backgroundColor": white_rgb,
-                    "textFormat": {
-                        "foregroundColor": black_rgb,
-                        "bold": True,
-                        "fontSize": 12
-                    },
-                    "horizontalAlignment": "CENTER",
-                    "verticalAlignment": "MIDDLE"
-                }
-            },
-            "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
-        }
-    })
-    reqs.append({
-        "repeatCell": {
-            "range": {
-                "sheetId": new_sheet_id,
-                "startRowIndex": 2,
-                "endRowIndex": 12,
-                "startColumnIndex": 18,
-                "endColumnIndex": 28
-            },
-            "cell": {
-                "userEnteredFormat": {
-                    "backgroundColor": white_rgb,
-                    "textFormat": {
-                        "foregroundColor": black_rgb,
-                        "bold": True,
-                        "fontSize": 12
-                    },
-                    "horizontalAlignment": "CENTER",
-                    "verticalAlignment": "MIDDLE"
-                }
-            },
-            "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
-        }
-    })
-
     updates = []
 
-    if grid_format == "10_spot":
-        for i in range(10):
-            r1 = 2 + i
-            r2 = r1 + 1
-            reqs.append({
-                "mergeCells": {
-                    "range": {
-                        "sheetId": new_sheet_id,
-                        "startRowIndex": r1,
-                        "endRowIndex": r2,
-                        "startColumnIndex": 2,
-                        "endColumnIndex": 12
-                    },
-                    "mergeType": "MERGE_ALL"
-                }
-            })
-            reqs.append({
-                "mergeCells": {
-                    "range": {
-                        "sheetId": new_sheet_id,
-                        "startRowIndex": r1,
-                        "endRowIndex": r2,
-                        "startColumnIndex": 18,
-                        "endColumnIndex": 28
-                    },
-                    "mergeType": "MERGE_ALL"
-                }
-            })
+    white_rgb  = {"red": 1.0,  "green": 1.0,  "blue": 1.0}
+    gray_rgb   = {"red": 0.85, "green": 0.85, "blue": 0.85}
+    black_rgb  = {"red": 0.0,  "green": 0.0,  "blue": 0.0}
+    bk_rgb     = {"red": 0.0,  "green": 0.0,  "blue": 0.0}
+    bk_txt_rgb = {"red": 1.0,  "green": 1.0,  "blue": 1.0}
 
-    elif grid_format == "5_spot":
-        for i in range(5):
-            r1 = 2 + i * 2
-            r2 = r1 + 2
-            reqs.append({
-                "mergeCells": {
-                    "range": {
-                        "sheetId": new_sheet_id,
-                        "startRowIndex": r1,
-                        "endRowIndex": r2,
-                        "startColumnIndex": 2,
-                        "endColumnIndex": 12
-                    },
-                    "mergeType": "MERGE_ALL"
-                }
-            })
-            reqs.append({
-                "mergeCells": {
-                    "range": {
-                        "sheetId": new_sheet_id,
-                        "startRowIndex": r1,
-                        "endRowIndex": r2,
-                        "startColumnIndex": 18,
-                        "endColumnIndex": 28
-                    },
-                    "mergeType": "MERGE_ALL"
-                }
-            })
+    thin_border = {"style": "SOLID", "color": black_rgb}
 
-    elif grid_format == "50_spot":
-        for r_i in range(10):
-            for c_i in range(5):
-                r1 = 2 + r_i
-                r2 = r1 + 1
-                c1 = 2 + c_i * 2
-                c2 = c1 + 2
-                reqs.append({
-                    "mergeCells": {
-                        "range": {
-                            "sheetId": new_sheet_id,
-                            "startRowIndex": r1,
-                            "endRowIndex": r2,
-                            "startColumnIndex": c1,
-                            "endColumnIndex": c2
-                        },
-                        "mergeType": "MERGE_ALL"
-                    }
-                })
-                c1_r = 18 + c_i * 2
-                c2_r = c1_r + 2
-                reqs.append({
-                    "mergeCells": {
-                        "range": {
-                            "sheetId": new_sheet_id,
-                            "startRowIndex": r1,
-                            "endRowIndex": r2,
-                            "startColumnIndex": c1_r,
-                            "endColumnIndex": c2_r
-                        },
-                        "mergeType": "MERGE_ALL"
-                    }
-                })
-
-    elif grid_format == "25_spot":
-        for r_i in range(5):
-            for c_i in range(5):
-                r1 = 2 + r_i * 2
-                r2 = r1 + 2
-                c1 = 2 + c_i * 2
-                c2 = c1 + 2
-                reqs.append({
-                    "mergeCells": {
-                        "range": {
-                            "sheetId": new_sheet_id,
-                            "startRowIndex": r1,
-                            "endRowIndex": r2,
-                            "startColumnIndex": c1,
-                            "endColumnIndex": c2
-                        },
-                        "mergeType": "MERGE_ALL"
-                    }
-                })
-                c1_r = 18 + c_i * 2
-                c2_r = c1_r + 2
-                reqs.append({
-                    "mergeCells": {
-                        "range": {
-                            "sheetId": new_sheet_id,
-                            "startRowIndex": r1,
-                            "endRowIndex": r2,
-                            "startColumnIndex": c1_r,
-                            "endColumnIndex": c2_r
-                        },
-                        "mergeType": "MERGE_ALL"
-                    }
-                })
-
-    elif grid_format == "4_spot":
-        quads = [(2, 7, 2, 7), (2, 7, 7, 12), (7, 12, 2, 7), (7, 12, 7, 12)]
-        quads_right = [(2, 7, 18, 23), (2, 7, 23, 28), (7, 12, 18, 23), (7, 12, 23, 28)]
-        for r1, r2, c1, c2 in quads:
-            reqs.append({
-                "mergeCells": {
-                    "range": {
-                        "sheetId": new_sheet_id,
-                        "startRowIndex": r1,
-                        "endRowIndex": r2,
-                        "startColumnIndex": c1,
-                        "endColumnIndex": c2
-                    },
-                    "mergeType": "MERGE_ALL"
-                }
-            })
-        for r1, r2, c1, c2 in quads_right:
-            reqs.append({
-                "mergeCells": {
-                    "range": {
-                        "sheetId": new_sheet_id,
-                        "startRowIndex": r1,
-                        "endRowIndex": r2,
-                        "startColumnIndex": c1,
-                        "endColumnIndex": c2
-                    },
-                    "mergeType": "MERGE_ALL"
-                }
-            })
-
-    thin_border = {"style": "SOLID", "color": {"red": 0.0, "green": 0.0, "blue": 0.0}}
-    for c1, c2 in [(2, 12), (18, 28)]:
+    for left_col, right_col in [(2, 12), (18, 28)]:
         reqs.append({
-            "updateBorders": {
+            "unmergeCells": {
                 "range": {
                     "sheetId": new_sheet_id,
                     "startRowIndex": 1,
-                    "endRowIndex": 2,
-                    "startColumnIndex": c1,
-                    "endColumnIndex": c2
-                },
-                "top": thin_border,
-                "bottom": thin_border,
-                "left": thin_border,
-                "right": thin_border,
-                "innerVertical": thin_border
+                    "endRowIndex": 13,
+                    "startColumnIndex": left_col,
+                    "endColumnIndex": right_col
+                }
             }
         })
 
-    for c1, c2 in [(2, 12), (18, 28)]:
-        reqs.append({
+    def cell_fmt(bg, txt=None):
+        fmt = {
+            "backgroundColor": bg,
+            "horizontalAlignment": "CENTER",
+            "verticalAlignment": "MIDDLE",
+            "textFormat": {
+                "foregroundColor": txt if txt else black_rgb,
+                "bold": True,
+                "fontSize": 12
+            }
+        }
+        return fmt
+
+    def repeat(r1, r2, c1, c2, bg, txt=None):
+        return {
+            "repeatCell": {
+                "range": {
+                    "sheetId": new_sheet_id,
+                    "startRowIndex": r1,
+                    "endRowIndex": r2,
+                    "startColumnIndex": c1,
+                    "endColumnIndex": c2
+                },
+                "cell": {"userEnteredFormat": cell_fmt(bg, txt)},
+                "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+            }
+        }
+
+    def borders(r1, r2, c1, c2):
+        return {
             "updateBorders": {
                 "range": {
                     "sheetId": new_sheet_id,
-                    "startRowIndex": 2,
-                    "endRowIndex": 12,
+                    "startRowIndex": r1,
+                    "endRowIndex": r2,
                     "startColumnIndex": c1,
                     "endColumnIndex": c2
                 },
@@ -342,27 +141,84 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
                 "innerHorizontal": thin_border,
                 "innerVertical": thin_border
             }
-        })
+        }
 
-    for c1, c2 in [(2, 12), (18, 28)]:
-        reqs.append({
-            "updateBorders": {
-                "range": {
-                    "sheetId": new_sheet_id,
-                    "startRowIndex": 12,
-                    "endRowIndex": 13,
-                    "startColumnIndex": c1,
-                    "endColumnIndex": c2
-                },
-                "top": thin_border,
-                "bottom": thin_border,
-                "left": thin_border,
-                "right": thin_border,
-                "innerVertical": thin_border
-            }
-        })
+    colors = [white_rgb, gray_rgb]
+
+    if grid_format == "10_spot":
+        for left_col, right_col in [(2, 12), (18, 28)]:
+            for i in range(10):
+                bg = colors[i % 2]
+                reqs.append(repeat(2 + i, 3 + i, left_col, right_col, bg))
+
+    elif grid_format == "5_spot":
+        for left_col, right_col in [(2, 12), (18, 28)]:
+            for i in range(5):
+                bg = colors[i % 2]
+                r1 = 2 + i * 2
+                reqs.append(repeat(r1, r1 + 2, left_col, right_col, bg))
+
+    elif grid_format == "50_spot":
+        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
+            spot_idx = 0
+            for r_i in range(10):
+                for c_i in range(5):
+                    bg = colors[spot_idx % 2]
+                    c1 = left_col_base + c_i * 2
+                    reqs.append(repeat(2 + r_i, 3 + r_i, c1, c1 + 2, bg))
+                    spot_idx += 1
+
+    elif grid_format == "25_spot":
+        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
+            spot_idx = 0
+            for r_i in range(5):
+                for c_i in range(5):
+                    bg = colors[spot_idx % 2]
+                    r1 = 2 + r_i * 2
+                    c1 = left_col_base + c_i * 2
+                    reqs.append(repeat(r1, r1 + 2, c1, c1 + 2, bg))
+                    spot_idx += 1
+
+    elif grid_format == "4_spot":
+        quad_colors = [white_rgb, gray_rgb, gray_rgb, white_rgb]
+        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
+            quads = [
+                (2, 7, left_col_base,     left_col_base + 5),
+                (2, 7, left_col_base + 5, right_col_base),
+                (7, 12, left_col_base,    left_col_base + 5),
+                (7, 12, left_col_base + 5, right_col_base),
+            ]
+            for idx, (r1, r2, c1, c2) in enumerate(quads):
+                reqs.append(repeat(r1, r2, c1, c2, quad_colors[idx]))
+
+    elif grid_format == "bankrupt_spot":
+        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
+            spot_idx = 0
+            for r_i in range(5):
+                for c_i in range(5):
+                    r1 = 2 + r_i * 2
+                    c1 = left_col_base + c_i * 2
+                    if r_i == 2 and c_i == 2:
+                        reqs.append(repeat(r1, r1 + 2, c1, c1 + 2, bk_rgb, bk_txt_rgb))
+                        updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1 + 1), "values": [["Bankrupt"]]})
+                    else:
+                        bg = colors[spot_idx % 2]
+                        reqs.append(repeat(r1, r1 + 2, c1, c1 + 2, bg))
+                    spot_idx += 1
+
+    else:
+        for left_col, right_col in [(2, 12), (18, 28)]:
+            reqs.append(repeat(2, 12, left_col, right_col, white_rgb))
+
+    for left_col, right_col in [(2, 12), (18, 28)]:
+        reqs.append(borders(1, 2,  left_col, right_col))
+        reqs.append(borders(2, 12, left_col, right_col))
+        reqs.append(borders(12, 13, left_col, right_col))
 
     return reqs, updates
+
+
+
 
 st.set_page_config(page_title="Bet Creation Dashboard", layout="centered")
 st.title("Automated Bet Creation")
