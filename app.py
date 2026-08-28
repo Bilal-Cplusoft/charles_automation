@@ -83,103 +83,107 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
 
     solid  = {"style": "SOLID", "color": black_rgb}
     none_b = {"style": "NONE"}
+    colors = [white_rgb, gray_rgb]
 
-    for left_col, right_col in [(2, 12), (18, 28)]:
-        reqs.append({"unmergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 13, "startColumnIndex": left_col, "endColumnIndex": right_col}}})
+    for lc, rc in [(2, 12), (18, 28)]:
+        reqs.append({"unmergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 13, "startColumnIndex": lc, "endColumnIndex": rc}}})
+        reqs.append({"repeatCell": {"range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 13, "startColumnIndex": lc, "endColumnIndex": rc}, "cell": {"userEnteredFormat": {"borders": {"top": none_b, "bottom": none_b, "left": none_b, "right": none_b}}}, "fields": "userEnteredFormat.borders"}})
 
-    def cell_fmt(bg, txt=None):
-        return {"backgroundColor": bg, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE", "textFormat": {"foregroundColor": txt if txt else black_rgb, "bold": True, "fontSize": 12}}
-
-    def repeat(r1, r2, c1, c2, bg, txt=None):
-        return {"repeatCell": {"range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2}, "cell": {"userEnteredFormat": cell_fmt(bg, txt)}, "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"}}
+    def fmt(r1, r2, c1, c2, bg, txt=None):
+        return {"repeatCell": {
+            "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+            "cell": {"userEnteredFormat": {"backgroundColor": bg, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE", "textFormat": {"foregroundColor": txt if txt else black_rgb, "bold": True, "fontSize": 12}}},
+            "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+        }}
 
     def spot_border(r1, r2, c1, c2):
-        req = {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2}, "top": solid, "bottom": solid, "left": solid, "right": solid}}
-        if (r2 - r1) > 1:
-            req["updateBorders"]["innerHorizontal"] = none_b
-        if (c2 - c1) > 1:
-            req["updateBorders"]["innerVertical"] = none_b
-        return req
+        return {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2}, "top": solid, "bottom": solid, "left": solid, "right": solid}}
 
     def grid_border(r1, r2, c1, c2):
         return {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2}, "top": solid, "bottom": solid, "left": solid, "right": solid, "innerHorizontal": solid, "innerVertical": solid}}
 
-    colors = [white_rgb, gray_rgb]
+    def paint(r1, r2, c1_l, c2_l, c1_r, c2_r, bg, spot_num, txt=None):
+        reqs.append(fmt(r1, r2, c1_l, c2_l, bg, txt))
+        reqs.append(spot_border(r1, r2, c1_l, c2_l))
+        reqs.append(fmt(r1, r2, c1_r, c2_r, bg, txt))
+        reqs.append(spot_border(r1, r2, c1_r, c2_r))
+        updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1_l + 1), "values": [[str(spot_num)]]})
+        updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1_r + 1), "values": [[str(spot_num)]]})
 
     if grid_format == "10_spot":
-        for left_col, right_col in [(2, 12), (18, 28)]:
-            for i in range(10):
-                r1 = 2 + i
-                reqs.append(repeat(r1, r1 + 1, left_col, right_col, colors[i % 2]))
-                reqs.append(spot_border(r1, r1 + 1, left_col, right_col))
+        for i in range(10):
+            r1 = 2 + i
+            paint(r1, r1 + 1, 2, 12, 18, 28, colors[i % 2], i + 1)
 
     elif grid_format == "5_spot":
-        for left_col, right_col in [(2, 12), (18, 28)]:
-            for i in range(5):
-                r1 = 2 + i * 2
-                reqs.append(repeat(r1, r1 + 2, left_col, right_col, colors[i % 2]))
-                reqs.append(spot_border(r1, r1 + 2, left_col, right_col))
+        for i in range(5):
+            r1 = 2 + i * 2
+            paint(r1, r1 + 2, 2, 12, 18, 28, colors[i % 2], i + 1)
 
     elif grid_format == "50_spot":
-        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
-            spot_idx = 0
-            for r_i in range(10):
-                for c_i in range(5):
-                    r1 = 2 + r_i
-                    c1 = left_col_base + c_i * 2
-                    reqs.append(repeat(r1, r1 + 1, c1, c1 + 2, colors[spot_idx % 2]))
-                    reqs.append(spot_border(r1, r1 + 1, c1, c1 + 2))
-                    spot_idx += 1
+        spot_idx = 0
+        for r_i in range(10):
+            for c_i in range(5):
+                r1   = 2 + r_i
+                c1_l = 2  + c_i * 2
+                c1_r = 18 + c_i * 2
+                paint(r1, r1 + 1, c1_l, c1_l + 2, c1_r, c1_r + 2, colors[spot_idx % 2], spot_idx + 1)
+                spot_idx += 1
 
     elif grid_format == "25_spot":
-        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
-            spot_idx = 0
-            for r_i in range(5):
-                for c_i in range(5):
-                    r1 = 2 + r_i * 2
-                    c1 = left_col_base + c_i * 2
-                    reqs.append(repeat(r1, r1 + 2, c1, c1 + 2, colors[spot_idx % 2]))
-                    reqs.append(spot_border(r1, r1 + 2, c1, c1 + 2))
-                    spot_idx += 1
+        spot_idx = 0
+        for r_i in range(5):
+            for c_i in range(5):
+                r1   = 2 + r_i * 2
+                c1_l = 2  + c_i * 2
+                c1_r = 18 + c_i * 2
+                paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, colors[spot_idx % 2], spot_idx + 1)
+                spot_idx += 1
 
     elif grid_format == "4_spot":
-        quad_colors = [white_rgb, gray_rgb, gray_rgb, white_rgb]
-        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
-            quads = [
-                (2, 7,  left_col_base,      left_col_base + 5),
-                (2, 7,  left_col_base + 5,  right_col_base),
-                (7, 12, left_col_base,      left_col_base + 5),
-                (7, 12, left_col_base + 5,  right_col_base),
-            ]
-            for idx, (r1, r2, c1, c2) in enumerate(quads):
-                reqs.append(repeat(r1, r2, c1, c2, quad_colors[idx]))
-                reqs.append(spot_border(r1, r2, c1, c2))
+        quads_l = [(2, 7, 2, 7),   (2, 7, 7, 12),   (7, 12, 2, 7),   (7, 12, 7, 12)]
+        quads_r = [(2, 7, 18, 23), (2, 7, 23, 28), (7, 12, 18, 23), (7, 12, 23, 28)]
+        quad_bg = [white_rgb, gray_rgb, gray_rgb, white_rgb]
+        for idx in range(4):
+            r1, r2, c1_l, c2_l = quads_l[idx]
+            _,  _,  c1_r, c2_r = quads_r[idx]
+            paint(r1, r2, c1_l, c2_l, c1_r, c2_r, quad_bg[idx], idx + 1)
 
     elif grid_format == "bankrupt_spot":
-        for left_col_base, right_col_base in [(2, 12), (18, 28)]:
-            spot_idx = 0
-            for r_i in range(5):
-                for c_i in range(5):
-                    r1 = 2 + r_i * 2
-                    c1 = left_col_base + c_i * 2
-                    if r_i == 2 and c_i == 2:
-                        reqs.append(repeat(r1, r1 + 2, c1, c1 + 2, bk_rgb, bk_txt_rgb))
-                        updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1 + 1), "values": [["Bankrupt"]]})
-                    else:
-                        reqs.append(repeat(r1, r1 + 2, c1, c1 + 2, colors[spot_idx % 2]))
-                    reqs.append(spot_border(r1, r1 + 2, c1, c1 + 2))
-                    spot_idx += 1
+        spot_idx = 0
+        for r_i in range(5):
+            for c_i in range(5):
+                r1   = 2 + r_i * 2
+                c1_l = 2  + c_i * 2
+                c1_r = 18 + c_i * 2
+                if r_i == 2 and c_i == 2:
+                    paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, bk_rgb, "Bankrupt", bk_txt_rgb)
+                else:
+                    paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, colors[spot_idx % 2], spot_idx + 1)
+                spot_idx += 1
 
     else:
-        for left_col, right_col in [(2, 12), (18, 28)]:
-            reqs.append(repeat(2, 12, left_col, right_col, white_rgb))
-            reqs.append(grid_border(2, 12, left_col, right_col))
+        spot_idx = 0
+        for r_i in range(10):
+            for c_i in range(10):
+                r1   = 2 + r_i
+                c1_l = 2  + c_i
+                c1_r = 18 + c_i
+                reqs.append(fmt(r1, r1 + 1, c1_l, c1_l + 1, white_rgb))
+                reqs.append(fmt(r1, r1 + 1, c1_r, c1_r + 1, white_rgb))
+                updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1_l + 1), "values": [[str(spot_idx + 1)]]})
+                updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1_r + 1), "values": [[str(spot_idx + 1)]]})
+                spot_idx += 1
+        reqs.append(grid_border(2, 12, 2, 12))
+        reqs.append(grid_border(2, 12, 18, 28))
 
-    for left_col, right_col in [(2, 12), (18, 28)]:
-        reqs.append(grid_border(1, 2,   left_col, right_col))
-        reqs.append(grid_border(12, 13, left_col, right_col))
+    for lc, rc in [(2, 12), (18, 28)]:
+        reqs.append(grid_border(1, 2,   lc, rc))
+        reqs.append(grid_border(12, 13, lc, rc))
 
     return reqs, updates
+
+
 st.set_page_config(page_title="Bet Creation Dashboard", layout="centered")
 st.title("Automated Bet Creation")
 
