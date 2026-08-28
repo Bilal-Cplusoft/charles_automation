@@ -186,61 +186,254 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
 
     updates = []
 
-    if grid_format == "bankrupt_spot":
+    if grid_format == "4_spot":
+        quads = [(2, 7, 2, 7), (2, 7, 7, 12), (7, 12, 2, 7), (7, 12, 7, 12)]
+        quads_right = [(2, 7, 18, 23), (2, 7, 23, 28), (7, 12, 18, 23), (7, 12, 23, 28)]
+        for r1, r2, c1, c2 in quads:
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": r1,
+                        "endRowIndex": r2,
+                        "startColumnIndex": c1,
+                        "endColumnIndex": c2
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+        for r1, r2, c1, c2 in quads_right:
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": r1,
+                        "endRowIndex": r2,
+                        "startColumnIndex": c1,
+                        "endColumnIndex": c2
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+
+    elif grid_format == "25_spot":
+        for r_i in range(5):
+            for c_i in range(5):
+                r1 = 2 + r_i * 2
+                r2 = r1 + 2
+                c1 = 2 + c_i * 2
+                c2 = c1 + 2
+                reqs.append({
+                    "mergeCells": {
+                        "range": {
+                            "sheetId": new_sheet_id,
+                            "startRowIndex": r1,
+                            "endRowIndex": r2,
+                            "startColumnIndex": c1,
+                            "endColumnIndex": c2
+                        },
+                        "mergeType": "MERGE_ALL"
+                    }
+                })
+
+                c1_r = 18 + c_i * 2
+                c2_r = c1_r + 2
+                reqs.append({
+                    "mergeCells": {
+                        "range": {
+                            "sheetId": new_sheet_id,
+                            "startRowIndex": r1,
+                            "endRowIndex": r2,
+                            "startColumnIndex": c1_r,
+                            "endColumnIndex": c2_r
+                        },
+                        "mergeType": "MERGE_ALL"
+                    }
+                })
+
+    elif grid_format == "bankrupt_spot":
         black_rgb = {"red": 0.0, "green": 0.0, "blue": 0.0}
         white_rgb = {"red": 1.0, "green": 1.0, "blue": 1.0}
-        # Mark center 2x2 cells (rows 7-8, cols G-H / G7:H8) as Bankrupt without destroying grid lines
-        reqs.append({
-            "repeatCell": {
-                "range": {
-                    "sheetId": new_sheet_id,
-                    "startRowIndex": 6,
-                    "endRowIndex": 8,
-                    "startColumnIndex": 6,
-                    "endColumnIndex": 8
-                },
-                "cell": {
-                    "userEnteredFormat": {
-                        "backgroundColor": black_rgb,
-                        "textFormat": {
-                            "foregroundColor": white_rgb,
-                            "bold": True,
-                            "fontSize": 12
-                        },
-                        "horizontalAlignment": "CENTER",
-                        "verticalAlignment": "MIDDLE"
-                    }
-                },
-                "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
-            }
-        })
-        updates.append({"range": "G7", "values": [["Bankrupt"]]})
 
-        reqs.append({
-            "repeatCell": {
-                "range": {
-                    "sheetId": new_sheet_id,
-                    "startRowIndex": 6,
-                    "endRowIndex": 8,
-                    "startColumnIndex": 22,
-                    "endColumnIndex": 24
-                },
-                "cell": {
-                    "userEnteredFormat": {
-                        "backgroundColor": black_rgb,
-                        "textFormat": {
-                            "foregroundColor": white_rgb,
-                            "bold": True,
-                            "fontSize": 12
+        for r_i in range(5):
+            for c_i in range(5):
+                r1 = 2 + r_i * 2
+                r2 = r1 + 2
+                c1 = 2 + c_i * 2
+                c2 = c1 + 2
+                reqs.append({
+                    "mergeCells": {
+                        "range": {
+                            "sheetId": new_sheet_id,
+                            "startRowIndex": r1,
+                            "endRowIndex": r2,
+                            "startColumnIndex": c1,
+                            "endColumnIndex": c2
                         },
-                        "horizontalAlignment": "CENTER",
-                        "verticalAlignment": "MIDDLE"
+                        "mergeType": "MERGE_ALL"
                     }
-                },
-                "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
-            }
-        })
-        updates.append({"range": "W7", "values": [["Bankrupt"]]})
+                })
+
+                c1_r = 18 + c_i * 2
+                c2_r = c1_r + 2
+                reqs.append({
+                    "mergeCells": {
+                        "range": {
+                            "sheetId": new_sheet_id,
+                            "startRowIndex": r1,
+                            "endRowIndex": r2,
+                            "startColumnIndex": c1_r,
+                            "endColumnIndex": c2_r
+                        },
+                        "mergeType": "MERGE_ALL"
+                    }
+                })
+
+                if r_i == 2 and c_i == 2:
+                    reqs.append({
+                        "repeatCell": {
+                            "range": {
+                                "sheetId": new_sheet_id,
+                                "startRowIndex": r1,
+                                "endRowIndex": r2,
+                                "startColumnIndex": c1,
+                                "endColumnIndex": c2
+                            },
+                            "cell": {
+                                "userEnteredFormat": {
+                                    "backgroundColor": black_rgb,
+                                    "textFormat": {
+                                        "foregroundColor": white_rgb,
+                                        "bold": True,
+                                        "fontSize": 12
+                                    },
+                                    "horizontalAlignment": "CENTER",
+                                    "verticalAlignment": "MIDDLE"
+                                }
+                            },
+                            "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+                        }
+                    })
+                    updates.append({"range": gspread.utils.rowcol_to_a1(r1+1, c1+1), "values": [["Bankrupt"]]})
+
+                    reqs.append({
+                        "repeatCell": {
+                            "range": {
+                                "sheetId": new_sheet_id,
+                                "startRowIndex": r1,
+                                "endRowIndex": r2,
+                                "startColumnIndex": c1_r,
+                                "endColumnIndex": c2_r
+                            },
+                            "cell": {
+                                "userEnteredFormat": {
+                                    "backgroundColor": black_rgb,
+                                    "textFormat": {
+                                        "foregroundColor": white_rgb,
+                                        "bold": True,
+                                        "fontSize": 12
+                                    },
+                                    "horizontalAlignment": "CENTER",
+                                    "verticalAlignment": "MIDDLE"
+                                }
+                            },
+                            "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+                        }
+                    })
+                    updates.append({"range": gspread.utils.rowcol_to_a1(r1+1, c1_r+1), "values": [["Bankrupt"]]})
+
+    elif grid_format == "10_spot":
+        for i in range(10):
+            r1 = 2 + i
+            r2 = r1 + 1
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": r1,
+                        "endRowIndex": r2,
+                        "startColumnIndex": 2,
+                        "endColumnIndex": 12
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": r1,
+                        "endRowIndex": r2,
+                        "startColumnIndex": 18,
+                        "endColumnIndex": 28
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+
+    elif grid_format == "5_spot":
+        for i in range(5):
+            r1 = 2 + i * 2
+            r2 = r1 + 2
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": r1,
+                        "endRowIndex": r2,
+                        "startColumnIndex": 2,
+                        "endColumnIndex": 12
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+            reqs.append({
+                "mergeCells": {
+                    "range": {
+                        "sheetId": new_sheet_id,
+                        "startRowIndex": r1,
+                        "endRowIndex": r2,
+                        "startColumnIndex": 18,
+                        "endColumnIndex": 28
+                    },
+                    "mergeType": "MERGE_ALL"
+                }
+            })
+
+    elif grid_format == "50_spot":
+        for r_i in range(10):
+            for c_i in range(5):
+                r1 = 2 + r_i
+                r2 = r1 + 1
+                c1 = 2 + c_i * 2
+                c2 = c1 + 2
+                reqs.append({
+                    "mergeCells": {
+                        "range": {
+                            "sheetId": new_sheet_id,
+                            "startRowIndex": r1,
+                            "endRowIndex": r2,
+                            "startColumnIndex": c1,
+                            "endColumnIndex": c2
+                        },
+                        "mergeType": "MERGE_ALL"
+                    }
+                })
+
+                c1_r = 18 + c_i * 2
+                c2_r = c1_r + 2
+                reqs.append({
+                    "mergeCells": {
+                        "range": {
+                            "sheetId": new_sheet_id,
+                            "startRowIndex": r1,
+                            "endRowIndex": r2,
+                            "startColumnIndex": c1_r,
+                            "endColumnIndex": c2_r
+                        },
+                        "mergeType": "MERGE_ALL"
+                    }
+                })
 
     thin_border = {"style": "SOLID", "color": {"red": 0.0, "green": 0.0, "blue": 0.0}}
     reqs.append({
