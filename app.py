@@ -99,7 +99,7 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
         }
     })
 
-    thin_border = {"style": "SOLID", "width": 1, "color": {"red": 0.8, "green": 0.8, "blue": 0.8}}
+    thin_border = {"style": "SOLID", "color": {"red": 0.0, "green": 0.0, "blue": 0.0}}
     reqs.append({
         "updateBorders": {
             "range": {
@@ -143,6 +143,30 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
                 "endRowIndex": 12,
                 "startColumnIndex": 2,
                 "endColumnIndex": 12
+            },
+            "cell": {
+                "userEnteredFormat": {
+                    "backgroundColor": white_rgb,
+                    "textFormat": {
+                        "foregroundColor": black_rgb,
+                        "bold": True,
+                        "fontSize": 12
+                    },
+                    "horizontalAlignment": "CENTER",
+                    "verticalAlignment": "MIDDLE"
+                }
+            },
+            "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+        }
+    })
+    reqs.append({
+        "repeatCell": {
+            "range": {
+                "sheetId": new_sheet_id,
+                "startRowIndex": 2,
+                "endRowIndex": 12,
+                "startColumnIndex": 18,
+                "endColumnIndex": 28
             },
             "cell": {
                 "userEnteredFormat": {
@@ -411,7 +435,41 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
                     }
                 })
 
-    return reqs, updates
+    thin_border = {"style": "SOLID", "color": {"red": 0.0, "green": 0.0, "blue": 0.0}}
+    reqs.append({
+        "updateBorders": {
+            "range": {
+                "sheetId": new_sheet_id,
+                "startRowIndex": 2,
+                "endRowIndex": 12,
+                "startColumnIndex": 2,
+                "endColumnIndex": 12
+            },
+            "top": thin_border,
+            "bottom": thin_border,
+            "left": thin_border,
+            "right": thin_border,
+            "innerHorizontal": thin_border,
+            "innerVertical": thin_border
+        }
+    })
+    reqs.append({
+        "updateBorders": {
+            "range": {
+                "sheetId": new_sheet_id,
+                "startRowIndex": 2,
+                "endRowIndex": 12,
+                "startColumnIndex": 18,
+                "endColumnIndex": 28
+            },
+            "top": thin_border,
+            "bottom": thin_border,
+            "left": thin_border,
+            "right": thin_border,
+            "innerHorizontal": thin_border,
+            "innerVertical": thin_border
+        }
+    })
 
     return reqs, updates
 
@@ -496,8 +554,10 @@ if submit:
             {"range": "A1", "values": [[f'=IMAGE("{league_logo}")']]},
             {"range": "C1", "values": [[f'=IMAGE("{game.get("away_logo", "")}")']]},
             {"range": "E1", "values": [[game.get("away_name", "")]]},
+            {"range": "K1", "values": [[""]]},
             {"range": "A2", "values": [[f'=IMAGE("{game.get("home_logo", "")}")']]},
             {"range": "A5", "values": [[game.get("home_name", "")]]},
+            {"range": "A11", "values": [[""]]},
             {"range": "B2", "values": [[f"${cost}"]]},
             {"range": "C2:L2", "values": [[str(n) for n in top_numbers]]},
             {"range": "B3:B12", "values": [[str(n)] for n in left_numbers]},
