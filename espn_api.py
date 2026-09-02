@@ -147,8 +147,23 @@ def fetch_espn_games(sport):
         raw_home_color = home_team.get("color", "000000").lstrip("#")
         raw_home_alt   = home_team.get("alternateColor", "FFFFFF").lstrip("#")
 
-        away_logo_raw = away_team.get("logo", "") or (away_team.get("logos")[0].get("href", "") if away_team.get("logos") else "")
-        home_logo_raw = home_team.get("logo", "") or (home_team.get("logos")[0].get("href", "") if home_team.get("logos") else "")
+        def get_transparent_logo(team_dict):
+            logos = team_dict.get("logos", [])
+            if logos:
+                for l in logos:
+                    if "scoreboard" in l.get("rel", []):
+                        return l.get("href", "")
+                href = logos[0].get("href", "")
+                if "/500/" in href and "/scoreboard/" not in href:
+                    return href.replace("/500/", "/500/scoreboard/")
+                return href
+            logo_raw = team_dict.get("logo", "")
+            if logo_raw and "/500/" in logo_raw and "/scoreboard/" not in logo_raw:
+                return logo_raw.replace("/500/", "/500/scoreboard/")
+            return logo_raw
+
+        away_logo_raw = get_transparent_logo(away_team)
+        home_logo_raw = get_transparent_logo(home_team)
 
         games.append({
             "id": event.get("id"),

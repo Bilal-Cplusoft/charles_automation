@@ -2,7 +2,7 @@ import gspread
 from config import hex_to_rgb
 
 def generate_spot_grid_requests(grid_format, new_sheet_id):
-    if grid_format.startswith("3n1_grid"):
+    if grid_format.startswith("3n1_grid") or grid_format.startswith("2n1_grid"):
         return [], []
     reqs = []
     updates = []

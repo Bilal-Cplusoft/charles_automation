@@ -10,12 +10,15 @@ st.markdown("### Square Board Options")
 grid_format = st.selectbox(
     "Grid Size (Spots)",
     list(GRID_FORMAT_CHOICES.keys()),
-    format_func=lambda x: "3n1 Grid" if x == "3n1_grid" else x
+    format_func=lambda x: "3n1 Grid" if x == "3n1_grid" else ("2n1 Grid" if x == "2n1_grid" else x)
 )
 
 if grid_format == "3n1_grid":
     winners = 12
     st.info("3n1 Grid automatically configures 12 winners across 3 selected games (4 quarter winners per game).")
+elif grid_format == "2n1_grid":
+    winners = 8
+    st.info("2n1 Grid automatically configures 8 winners across 2 selected games (4 quarter winners per game).")
 else:
     winners = st.number_input("Number of Winners", min_value=1, value=4)
 
@@ -56,6 +59,17 @@ if grid_format == "3n1_grid":
 
         g3_label = st.selectbox("Game 3", game_labels, index=min(2, len(game_labels) - 1), key="g3_select")
         game3 = next((g for g in fetched_games if g["label"] == g3_label), fetched_games[2] if len(fetched_games) > 2 else fetched_games[0])
+        selected_game = game1
+    else:
+        st.warning(f"No games found for {sport_label} via ESPN API.")
+elif grid_format == "2n1_grid":
+    if fetched_games:
+        game_labels = [g["label"] for g in fetched_games]
+        g1_label = st.selectbox("Game 1", game_labels, index=0, key="g1_select")
+        game1 = next((g for g in fetched_games if g["label"] == g1_label), fetched_games[0])
+
+        g2_label = st.selectbox("Game 2", game_labels, index=min(1, len(game_labels) - 1), key="g2_select")
+        game2 = next((g for g in fetched_games if g["label"] == g2_label), fetched_games[1] if len(fetched_games) > 1 else fetched_games[0])
         selected_game = game1
     else:
         st.warning(f"No games found for {sport_label} via ESPN API.")

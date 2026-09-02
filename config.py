@@ -33,7 +33,8 @@ GRID_FORMAT_CHOICES = {
     "5_spot": "5_spot",
     "4_spot": "4_spot",
     "bankrupt_spot": "bankrupt_spot",
-    "3n1_grid": "3n1_grid"
+    "3n1_grid": "3n1_grid",
+    "2n1_grid": "2n1_grid"
 }
 
 def hex_to_rgb(hex_str):

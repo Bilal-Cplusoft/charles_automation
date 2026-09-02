@@ -43,16 +43,26 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
         if m:
             hrs, mins = m.group(1), m.group(2)
             if mins == "00":
-                return f"{hrs}MT"
-            return f"{hrs}{mins}MT"
-        t_clean = t.replace(":", "")
-        return f"{t_clean}MT"
+                val = hrs
+            else:
+                val = f"{hrs}{mins}"
+        else:
+            val = t.replace(":", "")
+        if len(val) > 3:
+            val = val[:3]
+        return f"{val}MT"
 
     if grid_format.startswith("3n1_grid"):
-
         new_tab_title = f"{today_label} {sport.upper()} 3n1"
         try:
             source_ws = sh.worksheet("3n1")
+            source_sheet_id = source_ws.id
+        except Exception:
+            source_sheet_id = TEMPLATE_SHEET_ID
+    elif grid_format.startswith("2n1_grid"):
+        new_tab_title = f"{today_label} {sport.upper()} 2n1"
+        try:
+            source_ws = sh.worksheet("2n1")
             source_sheet_id = source_ws.id
         except Exception:
             source_sheet_id = TEMPLATE_SHEET_ID
@@ -60,11 +70,12 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
         new_tab_title = f"{today_label} ${cost} {sport.upper()} {game['away_abbrev'].lower()}/{game['home_abbrev'].lower()}"
         source_sheet_id = TEMPLATE_SHEET_ID
 
-    try:
-        old_tab = sh.worksheet(new_tab_title)
-        sh.del_worksheet(old_tab)
-    except Exception:
-        pass
+    for ws in sh.worksheets():
+        if ws.title == new_tab_title or ws.title.startswith(f"{new_tab_title}_conflict"):
+            try:
+                sh.del_worksheet(ws)
+            except Exception:
+                pass
 
     dup_req = {
         "requests": [
@@ -79,6 +90,18 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
     }
     res = sh.batch_update(dup_req)
     new_sheet_id = res["replies"][0]["duplicateSheet"]["properties"]["sheetId"]
+
+    try:
+        sh.batch_update({
+            "requests": [{
+                "updateSheetProperties": {
+                    "properties": {"sheetId": new_sheet_id, "title": new_tab_title},
+                    "fields": "title"
+                }
+            }]
+        })
+    except Exception:
+        pass
 
     top_numbers = ["" for _ in range(10)]
     left_numbers = [[""] for _ in range(10)]
@@ -104,7 +127,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
 
     payout_merge_reqs = []
 
-    if grid_format.startswith("3n1_grid"):
+    if grid_format.startswith("3n1_grid") or grid_format.startswith("2n1_grid"):
         g1_away_name = game1.get("away_name", game1.get("away_abbrev", "G1-A")) if game1 else "G1-A"
         g2_away_name = game2.get("away_name", game2.get("away_abbrev", "G2-A")) if game2 else "G2-A"
         g3_away_name = game3.get("away_name", game3.get("away_abbrev", "G3-A")) if game3 else "G3-A"
@@ -123,71 +146,6 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
         g1_time = clean_time(game1.get("game_time", "")) if game1 else ""
         g2_time = clean_time(game2.get("game_time", "")) if game2 else ""
         g3_time = clean_time(game3.get("game_time", "")) if game3 else ""
-
-        if grid_format.startswith("3n1_grid") or cost == 36:
-            p123, p_fs = 50, 100
-        else:
-            per_game_pool = net_payout_pool // 3
-            raw_share = per_game_pool // 5
-            share = int(round(raw_share / 5.0) * 5)
-            p123 = share
-            p_fs = share * 2
-        
-        updates = [
-            {"range": "A1", "values": [[league_logo_formula]]},
-            {"range": "D1", "values": [[g1_alogo]]},
-            {"range": "D2", "values": [[g2_alogo]]},
-            {"range": "D3", "values": [[g3_alogo]]},
-            {"range": "G1", "values": [[g1_away_name]]},
-            {"range": "G2", "values": [[g2_away_name]]},
-            {"range": "G3", "values": [[g3_away_name]]},
-            {"range": "A4", "values": [[g1_hlogo]]},
-            {"range": "B4", "values": [[g2_hlogo]]},
-            {"range": "C4", "values": [[g3_hlogo]]},
-            {"range": "A7", "values": [[g1_home_name]]},
-            {"range": "B7", "values": [[g2_home_name]]},
-            {"range": "C7", "values": [[g3_home_name]]},
-            
-            {"range": "D4", "values": [[float(cost)]]},
-            {"range": "T4", "values": [[float(cost)]]},
-            
-            {"range": "D17", "values": [["Game 1"]]},
-            {"range": "F17", "values": [[g1_time]]},
-            {"range": "I17", "values": [[f"1st {p123}"]]},
-            {"range": "K17", "values": [[f"2nd {p123}"]]},
-            {"range": "M17", "values": [[f"3rd {p123}"]]},
-            {"range": "O17", "values": [[f"FS: {p_fs}"]]},
-
-            {"range": "D18", "values": [["Game 2"]]},
-            {"range": "F18", "values": [[g2_time]]},
-            {"range": "I18", "values": [[f"1st {p123}"]]},
-            {"range": "K18", "values": [[f"2nd {p123}"]]},
-            {"range": "M18", "values": [[f"3rd {p123}"]]},
-            {"range": "O18", "values": [[f"FS: {p_fs}"]]},
-
-            {"range": "D19", "values": [["Game 3"]]},
-            {"range": "F19", "values": [[g3_time]]},
-            {"range": "I19", "values": [[f"1st {p123}"]]},
-            {"range": "K19", "values": [[f"2nd {p123}"]]},
-            {"range": "M19", "values": [[f"3rd {p123}"]]},
-            {"range": "O19", "values": [[f"FS: {p_fs}"]]},
-        ]
-
-        spot = 1
-        for rp in [7, 9, 11, 13, 15]:
-            for cp in ["G", "I", "K", "M", "O"]:
-                updates.append({"range": f"{cp}{rp}", "values": [[str(spot)]]})
-                spot += 1
-
-        spot = 1
-        for rp in [7, 9, 11, 13, 15]:
-            for cp in ["W", "Y", "AA", "AC", "AE"]:
-                updates.append({"range": f"{cp}{rp}", "values": [[str(spot)]]})
-                spot += 1
-
-        updates.extend([
-            {"range": "A17", "values": [[community_logo_formula]]},
-        ])
 
         def get_fmt(bg, txt):
             return {"userEnteredFormat": {"backgroundColor": bg, "textFormat": {"foregroundColor": txt}}}
@@ -215,75 +173,267 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "fields": "userEnteredFormat(backgroundColor,textFormat.foregroundColor)"
                 }
             }
-            
-        payout_merge_reqs.extend([
-            {"unmergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 25, "startColumnIndex": 16, "endColumnIndex": 19}}},
-            {
+
+        def req_title_fmt(r1, r2, c1, c2, bg, txt, font_size=24):
+            return {
                 "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 25, "startColumnIndex": 16, "endColumnIndex": 19},
-                    "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}, "borders": {"top": {"style": "NONE"}, "bottom": {"style": "NONE"}, "left": {"style": "NONE"}, "right": {"style": "NONE"}}}},
-                    "fields": "userEnteredFormat(backgroundColor,borders)"
-                }
-            },
-            {
-                "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 3, "startColumnIndex": 0, "endColumnIndex": 3},
-                    "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}},
-                    "fields": "userEnteredFormat.backgroundColor"
-                }
-            },
-            {
-                "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 3, "startColumnIndex": 6, "endColumnIndex": 15},
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
                     "cell": {
                         "userEnteredFormat": {
-                            "textFormat": {"bold": True, "fontSize": 14},
+                            "backgroundColor": bg,
+                            "textFormat": {"foregroundColor": txt, "bold": True, "fontSize": font_size},
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
                     },
-                    "fields": "userEnteredFormat(textFormat,horizontalAlignment,verticalAlignment)"
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
                 }
-            },
-            req_bg(0, 1, 6, 15, g1_a_bg, g1_a_txt), # G1:O1 (Left Away 1)
-            req_bg(1, 2, 6, 15, g2_a_bg, g2_a_txt), # G2:O2 (Left Away 2)
-            req_bg(2, 3, 6, 15, g3_a_bg, g3_a_txt), # G3:O3 (Left Away 3)
+            }
+
+        if grid_format.startswith("2n1_grid"):
+            per_game_pool = net_payout_pool // 2
+            p1 = int(round((per_game_pool * 0.18) / 5.0) * 5)
+            p2 = int(round((per_game_pool * 0.23) / 5.0) * 5)
+            p3 = p1
+            p_fs = per_game_pool - (p1 + p2 + p3)
+
+            cost_val = int(cost) if int(cost) == float(cost) else cost
+            cost_str = f"${cost_val}"
+
+            updates = [
+                # Left Grid Top Logos & Headers
+                {"range": "A1", "values": [[league_logo_formula]]},
+                {"range": "D1", "values": [[g1_alogo]]},
+                {"range": "D2", "values": [[g2_alogo]]},
+                {"range": "E1", "values": [[g1_away_name]]},
+                {"range": "E2", "values": [[g2_away_name]]},
+                {"range": "M1", "values": [[community_logo_formula]]},
+                {"range": "A3", "values": [[g1_hlogo]]},
+                {"range": "B3", "values": [[g2_hlogo]]},
+                {"range": "A5", "values": [[g1_home_name]]},
+                {"range": "B5", "values": [[g2_home_name]]},
+                
+                # C3:D4 Cost & Game Labels (G1 / G1 / G2)
+                {"range": "C3", "values": [[cost_str]]},
+                {"range": "D3", "values": [["G1"]]},
+                {"range": "C4", "values": [["G1"]]},
+                {"range": "D4", "values": [["G2"]]},
+
+                # Left Grid Payouts & Game Times (Row 15 & 16)
+                {"range": "C15", "values": [["G1"]]},
+                {"range": "D15", "values": [[g1_time]]},
+                {"range": "E15", "values": [["PAYOUTS"]]},
+                {"range": "G15", "values": [[f"1st {p1}"]]},
+                {"range": "I15", "values": [[f"2nd {p2}"]]},
+                {"range": "K15", "values": [[f"3rd {p3}"]]},
+                {"range": "M15", "values": [[f"FS: {p_fs}"]]},
+
+                {"range": "C16", "values": [["G2"]]},
+                {"range": "D16", "values": [[g2_time]]},
+                {"range": "E16", "values": [["PAYOUTS"]]},
+                {"range": "G16", "values": [[f"1st {p1}"]]},
+                {"range": "I16", "values": [[f"2nd {p2}"]]},
+                {"range": "K16", "values": [[f"3rd {p3}"]]},
+                {"range": "M16", "values": [[f"FS: {p_fs}"]]},
+            ]
+
+            white_bg  = {"red": 1.0, "green": 1.0, "blue": 1.0}
+            white_rgb = white_bg
+            black_bg  = {"red": 0.0, "green": 0.0, "blue": 0.0}
+
+            def req_bg_txt(r1, r2, c1, c2, bg, txt):
+                return {
+                    "repeatCell": {
+                        "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                        "cell": {"userEnteredFormat": {"backgroundColor": bg, "textFormat": {"foregroundColor": txt}}},
+                        "fields": "userEnteredFormat(backgroundColor,textFormat.foregroundColor)"
+                    }
+                }
+
+            payout_merge_reqs.extend([
+                # Unmerge Row 3 & Row 4 horizontal number cells (E3:N4)
+                {"unmergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 4, "startColumnIndex": 4, "endColumnIndex": 14}}},
+
+                # A1:B2 Black Background for top left NFL logo margin
+                req_bg_txt(0, 2, 0, 2, black_bg, white_rgb),
+
+                # Away 1 Logo C1:D1 & Away 1 Name E1:L1 (Game 1 Away Color)
+                req_bg_txt(0, 1, 2, 4, g1_a_bg, g1_a_txt),
+                req_title_fmt(0, 1, 4, 12, g1_a_bg, g1_a_txt, font_size=28),
+
+                # Away 2 Logo C2:D2 & Away 2 Name E2:L2 (Game 2 Away Color)
+                req_bg_txt(1, 2, 2, 4, g2_a_bg, g2_a_txt),
+                req_title_fmt(1, 2, 4, 12, g2_a_bg, g2_a_txt, font_size=28),
+
+                # Top Right Breaking Fire Logo M1:N2 WHITE Background
+                req_bg_txt(0, 2, 12, 14, white_bg, black_bg),
+
+                # Horizontal Number Rows E3:N3 (Game 1 Away Color) & E4:N4 (Game 2 Away Color)
+                req_bg_txt(2, 3, 4, 14, g1_a_bg, g1_a_txt),
+                req_bg_txt(3, 4, 4, 14, g2_a_bg, g2_a_txt),
+                
+                # Home 1 Logo A3:A4 & Home 2 Logo B3:B4
+                req_bg_txt(2, 4, 0, 1, g1_h_bg, g1_h_txt),
+                req_bg_txt(2, 4, 1, 2, g2_h_bg, g2_h_txt),
+
+                # Home 1 Name A5:A14 & Home 2 Name B5:B14
+                req_bg_txt(4, 14, 0, 1, g1_h_bg, g1_h_txt),
+                req_bg_txt(4, 14, 1, 2, g2_h_bg, g2_h_txt),
+
+                # Vertical Number Columns C5:C14 (Game 1 Home Color) & D5:D14 (Game 2 Home Color)
+                req_bg_txt(4, 14, 2, 3, g1_h_bg, g1_h_txt),
+                req_bg_txt(4, 14, 3, 4, g2_h_bg, g2_h_txt),
+
+                {"updateDimensionProperties": {
+                    "range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 2},
+                    "properties": {"pixelSize": 50},
+                    "fields": "pixelSize"
+                }},
+            ])
+
+        else: # 3n1_grid
+            if grid_format.startswith("3n1_grid") or cost == 36:
+                p123, p_fs = 50, 100
+            else:
+                per_game_pool = net_payout_pool // 3
+                raw_share = per_game_pool // 5
+                share = int(round(raw_share / 5.0) * 5)
+                p123 = share
+                p_fs = share * 2
             
-            req_bg(3, 15, 0, 1, g1_h_bg, g1_h_txt), # A4:A15 (Left Home 1)
-            req_bg(3, 15, 1, 2, g2_h_bg, g2_h_txt), # B4:B15 (Left Home 2)
-            req_bg(3, 15, 2, 3, g3_h_bg, g3_h_txt), # C4:C15 (Left Home 3)
-            
-            {
-                "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 16, "endRowIndex": 19, "startColumnIndex": 0, "endColumnIndex": 3},
-                    "cell": {
-                        "userEnteredFormat": {
-                            "backgroundColor": {"red": 0.0, "green": 0.0, "blue": 0.0}
-                        }
-                    },
-                    "fields": "userEnteredFormat.backgroundColor"
-                }
-            },
-            {
-                "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 6, "endRowIndex": 15, "startColumnIndex": 6, "endColumnIndex": 15},
-                    "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}},
-                    "fields": "userEnteredFormat.backgroundColor"
-                }
-            },
-            {
-                "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 6, "endRowIndex": 15, "startColumnIndex": 22, "endColumnIndex": 31},
-                    "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}},
-                    "fields": "userEnteredFormat.backgroundColor"
-                }
-            },
-            {"updateDimensionProperties": {
-                "range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 3},
-                "properties": {"pixelSize": 50},
-                "fields": "pixelSize"
-            }},
-        ])
+            updates = [
+                {"range": "A1", "values": [[league_logo_formula]]},
+                {"range": "D1", "values": [[g1_alogo]]},
+                {"range": "D2", "values": [[g2_alogo]]},
+                {"range": "D3", "values": [[g3_alogo]]},
+                {"range": "G1", "values": [[g1_away_name]]},
+                {"range": "G2", "values": [[g2_away_name]]},
+                {"range": "G3", "values": [[g3_away_name]]},
+                {"range": "A4", "values": [[g1_hlogo]]},
+                {"range": "B4", "values": [[g2_hlogo]]},
+                {"range": "C4", "values": [[g3_hlogo]]},
+                {"range": "A7", "values": [[g1_home_name]]},
+                {"range": "B7", "values": [[g2_home_name]]},
+                {"range": "C7", "values": [[g3_home_name]]},
+                
+                {"range": "D4", "values": [[float(cost)]]},
+                {"range": "T4", "values": [[float(cost)]]},
+                
+                {"range": "D17", "values": [["Game 1"]]},
+                {"range": "F17", "values": [[g1_time]]},
+                {"range": "I17", "values": [[f"1st {p123}"]]},
+                {"range": "K17", "values": [[f"2nd {p123}"]]},
+                {"range": "M17", "values": [[f"3rd {p123}"]]},
+                {"range": "O17", "values": [[f"FS: {p_fs}"]]},
+
+                {"range": "D18", "values": [["Game 2"]]},
+                {"range": "F18", "values": [[g2_time]]},
+                {"range": "I18", "values": [[f"1st {p123}"]]},
+                {"range": "K18", "values": [[f"2nd {p123}"]]},
+                {"range": "M18", "values": [[f"3rd {p123}"]]},
+                {"range": "O18", "values": [[f"FS: {p_fs}"]]},
+
+                {"range": "D19", "values": [["Game 3"]]},
+                {"range": "F19", "values": [[g3_time]]},
+                {"range": "I19", "values": [[f"1st {p123}"]]},
+                {"range": "K19", "values": [[f"2nd {p123}"]]},
+                {"range": "M19", "values": [[f"3rd {p123}"]]},
+                {"range": "O19", "values": [[f"FS: {p_fs}"]]},
+            ]
+
+            spot = 1
+            for rp in [7, 9, 11, 13, 15]:
+                for cp in ["G", "I", "K", "M", "O"]:
+                    updates.append({"range": f"{cp}{rp}", "values": [[str(spot)]]})
+                    spot += 1
+
+            spot = 1
+            for rp in [7, 9, 11, 13, 15]:
+                for cp in ["W", "Y", "AA", "AC", "AE"]:
+                    updates.append({"range": f"{cp}{rp}", "values": [[str(spot)]]})
+                    spot += 1
+
+            updates.extend([
+                {"range": "A17", "values": [[community_logo_formula]]},
+            ])
+
+            payout_merge_reqs.extend([
+                {"unmergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 25, "startColumnIndex": 16, "endColumnIndex": 19}}},
+                {
+                    "repeatCell": {
+                        "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 25, "startColumnIndex": 16, "endColumnIndex": 19},
+                        "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}, "borders": {"top": {"style": "NONE"}, "bottom": {"style": "NONE"}, "left": {"style": "NONE"}, "right": {"style": "NONE"}}}},
+                        "fields": "userEnteredFormat(backgroundColor,borders)"
+                    }
+                },
+                req_bg(0, 1, 3, 4, g1_a_bg, g1_a_txt), # D1 Away 1 logo bg
+                req_bg(1, 2, 3, 4, g2_a_bg, g2_a_txt), # D2 Away 2 logo bg
+                req_bg(2, 3, 3, 4, g3_a_bg, g3_a_txt), # D3 Away 3 logo bg
+                
+                req_bg(3, 4, 0, 1, g1_h_bg, g1_h_txt), # A4 Home 1 logo bg
+                req_bg(3, 4, 1, 2, g2_h_bg, g2_h_txt), # B4 Home 2 logo bg
+                req_bg(3, 4, 2, 3, g3_h_bg, g3_h_txt), # C4 Home 3 logo bg
+
+                req_title_fmt(0, 1, 6, 16, g1_a_bg, g1_a_txt, font_size=24), # G1:P1 (Left Away 1)
+                req_title_fmt(1, 2, 6, 16, g2_a_bg, g2_a_txt, font_size=24), # G2:P2 (Left Away 2)
+                req_title_fmt(2, 3, 6, 16, g3_a_bg, g3_a_txt, font_size=24), # G3:P3 (Left Away 3)
+                
+                req_bg(3, 4, 6, 16, g1_a_bg, g1_a_txt), # G4:P4 (Left Away 1 strip)
+                req_bg(4, 5, 6, 16, g2_a_bg, g2_a_txt), # G5:P5 (Left Away 2 strip)
+                req_bg(5, 6, 6, 16, g3_a_bg, g3_a_txt), # G6:P6 (Left Away 3 strip)
+
+                req_bg(6, 16, 0, 1, g1_h_bg, g1_h_txt), # A7:A16 (Left Home 1)
+                req_bg(6, 16, 1, 2, g2_h_bg, g2_h_txt), # B7:B16 (Left Home 2)
+                req_bg(6, 16, 2, 3, g3_h_bg, g3_h_txt), # C7:C16 (Left Home 3)
+
+                req_bg(6, 16, 3, 4, g1_h_bg, g1_h_txt), # D7:D16 (Left Home 1 strip)
+                req_bg(6, 16, 4, 5, g2_h_bg, g2_h_txt), # E7:E16 (Left Home 2 strip)
+                req_bg(6, 16, 5, 6, g3_h_bg, g3_h_txt), # F7:F16 (Left Home 3 strip)
+                
+                {
+                    "repeatCell": {
+                        "range": {"sheetId": new_sheet_id, "startRowIndex": 16, "endRowIndex": 19, "startColumnIndex": 0, "endColumnIndex": 3},
+                        "cell": {
+                            "userEnteredFormat": {
+                                "backgroundColor": {"red": 0.0, "green": 0.0, "blue": 0.0}
+                            }
+                        },
+                        "fields": "userEnteredFormat.backgroundColor"
+                    }
+                },
+                {
+                    "repeatCell": {
+                        "range": {"sheetId": new_sheet_id, "startRowIndex": 16, "endRowIndex": 19, "startColumnIndex": 3, "endColumnIndex": 16},
+                        "cell": {
+                            "userEnteredFormat": {
+                                "textFormat": {"bold": True, "fontSize": 10},
+                                "horizontalAlignment": "CENTER",
+                                "verticalAlignment": "MIDDLE"
+                            }
+                        },
+                        "fields": "userEnteredFormat(textFormat,horizontalAlignment,verticalAlignment)"
+                    }
+                },
+                {
+                    "repeatCell": {
+                        "range": {"sheetId": new_sheet_id, "startRowIndex": 6, "endRowIndex": 16, "startColumnIndex": 6, "endColumnIndex": 16},
+                        "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}},
+                        "fields": "userEnteredFormat.backgroundColor"
+                    }
+                },
+                {
+                    "repeatCell": {
+                        "range": {"sheetId": new_sheet_id, "startRowIndex": 6, "endRowIndex": 16, "startColumnIndex": 22, "endColumnIndex": 32},
+                        "cell": {"userEnteredFormat": {"backgroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}}},
+                        "fields": "userEnteredFormat.backgroundColor"
+                    }
+                },
+                {"updateDimensionProperties": {
+                    "range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 3},
+                    "properties": {"pixelSize": 50},
+                    "fields": "pixelSize"
+                }},
+            ])
     else:
         updates = [
             {"range": "A1", "values": [[league_logo_formula]]},
@@ -392,6 +542,8 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
     new_sheet = sh.get_worksheet_by_id(new_sheet_id)
     if grid_format.startswith("3n1_grid"):
         new_sheet.batch_clear(["Q1:S25"])
+    elif grid_format.startswith("2n1_grid"):
+        pass
     else:
         new_sheet.batch_clear(["C3:L12", "S3:AB12", "C13:L15", "S13:AB15"])
 
@@ -408,7 +560,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
     payout_end_row = 15 if grid_format.startswith("3n1_grid") else 13
 
     payout_format_reqs = []
-    if not grid_format.startswith("3n1_grid"):
+    if not grid_format.startswith("3n1_grid") and not grid_format.startswith("2n1_grid"):
         for col_start, col_end in [(2, 12), (18, 28)]:
             payout_format_reqs.append({
                 "repeatCell": {
@@ -441,39 +593,33 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
     white_rgb = hex_to_rgb("FFFFFF")
 
     header_reqs = []
-    if not grid_format.startswith('3n1_grid'):
+    if not grid_format.startswith('3n1_grid') and not grid_format.startswith('2n1_grid'):
         header_reqs = [
-            {"updateDimensionProperties": {"range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 1}, "properties": {"pixelSize": 80 if grid_format.startswith("3n1_grid") else 50}, "fields": "pixelSize"}},
+            {"updateDimensionProperties": {"range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 1}, "properties": {"pixelSize": 80}, "fields": "pixelSize"}},
             {"updateDimensionProperties": {"range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 1, "endIndex": 2}, "properties": {"pixelSize": 50}, "fields": "pixelSize"}},
         ]
     
-        if grid_format.startswith("3n1_grid"):
-            header_reqs.append(
-                {"updateDimensionProperties": {"range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 12, "endIndex": 15}, "properties": {"pixelSize": 40}, "fields": "pixelSize"}}
-            )
-    
-        if not grid_format.startswith("3n1_grid"):
-            header_reqs += [
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 1, "endColumnIndex": 4}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 4, "endColumnIndex": 10}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 10, "endColumnIndex": 12}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
-    
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 17, "endColumnIndex": 20}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 20, "endColumnIndex": 26}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 26, "endColumnIndex": 28}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
-                {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
-            ]
+        header_reqs += [
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 1, "endColumnIndex": 4}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 4, "endColumnIndex": 10}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 10, "endColumnIndex": 12}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
+
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 17, "endColumnIndex": 20}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 20, "endColumnIndex": 26}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 26, "endColumnIndex": 28}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
+        ]
     
         header_reqs.extend([
             {
                 "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": 4},
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 1, "endColumnIndex": 4},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": away_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -486,7 +632,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 10, "endColumnIndex": 12},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": away_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -499,7 +645,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": 1},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": home_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -512,7 +658,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 0, "endColumnIndex": 1},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": home_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -522,10 +668,10 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             },
             {
                 "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 16, "endColumnIndex": 20},
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 17, "endColumnIndex": 20},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": away_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -538,7 +684,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 26, "endColumnIndex": 28},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": away_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -551,7 +697,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 16, "endColumnIndex": 17},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": home_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -564,7 +710,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 16, "endColumnIndex": 17},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": white_rgb,
+                            "backgroundColor": home_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -574,66 +720,65 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             },
         ])
     
-        if not grid_format.startswith("3n1_grid"):
-            header_reqs.extend([
-                {
-                    "repeatCell": {
-                        "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 4, "endColumnIndex": 10},
-                        "cell": {
-                            "userEnteredFormat": {
-                                "backgroundColor": away_rgb,
-                                "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 14},
-                                "horizontalAlignment": "CENTER",
-                                "verticalAlignment": "MIDDLE"
-                            }
-                        },
-                        "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
-                    }
-                },
-                {
-                    "repeatCell": {
-                        "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 20, "endColumnIndex": 26},
-                        "cell": {
-                            "userEnteredFormat": {
-                                "backgroundColor": away_rgb,
-                                "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 14},
-                                "horizontalAlignment": "CENTER",
-                                "verticalAlignment": "MIDDLE"
-                            }
-                        },
-                        "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
-                    }
-                },
-                {
-                    "repeatCell": {
-                        "range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1},
-                        "cell": {
-                            "userEnteredFormat": {
-                                "backgroundColor": home_rgb,
-                                "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 14},
-                                "horizontalAlignment": "CENTER",
-                                "verticalAlignment": "MIDDLE",
-                                "textRotation": {"angle": 90}
-                            }
-                        },
-                        "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,textRotation)"
-                    }
-                },
-                {
-                    "repeatCell": {
-                        "range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17},
-                        "cell": {
-                            "userEnteredFormat": {
-                                "backgroundColor": home_rgb,
-                                "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 14},
-                                "horizontalAlignment": "CENTER",
-                                "verticalAlignment": "MIDDLE",
-                                "textRotation": {"angle": 90}
-                            }
-                        },
-                        "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,textRotation)"
-                    }
-                },
+        header_reqs.extend([
+            {
+                "repeatCell": {
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 4, "endColumnIndex": 10},
+                    "cell": {
+                        "userEnteredFormat": {
+                            "backgroundColor": away_rgb,
+                            "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 32},
+                            "horizontalAlignment": "CENTER",
+                            "verticalAlignment": "MIDDLE"
+                        }
+                    },
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+                }
+            },
+            {
+                "repeatCell": {
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 20, "endColumnIndex": 26},
+                    "cell": {
+                        "userEnteredFormat": {
+                            "backgroundColor": away_rgb,
+                            "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 32},
+                            "horizontalAlignment": "CENTER",
+                            "verticalAlignment": "MIDDLE"
+                        }
+                    },
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
+                }
+            },
+            {
+                "repeatCell": {
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1},
+                    "cell": {
+                        "userEnteredFormat": {
+                            "backgroundColor": home_rgb,
+                            "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 28},
+                            "horizontalAlignment": "CENTER",
+                            "verticalAlignment": "MIDDLE",
+                            "textRotation": {"angle": 90}
+                        }
+                    },
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,textRotation)"
+                }
+            },
+            {
+                "repeatCell": {
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17},
+                    "cell": {
+                        "userEnteredFormat": {
+                            "backgroundColor": home_rgb,
+                            "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 28},
+                            "horizontalAlignment": "CENTER",
+                            "verticalAlignment": "MIDDLE",
+                            "textRotation": {"angle": 90}
+                        }
+                    },
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,textRotation)"
+                }
+            },
                 {
                     "repeatCell": {
                         "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 1, "endColumnIndex": 2},
