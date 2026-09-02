@@ -55,25 +55,25 @@ def fetch_espn_games(sport):
     }
 
     session = get_retry_session()
-    url = f"https://site.web.api.espn.com/apis/site/v2/sports/{sport_category}/{api_sport}/scoreboard{extra_params}"
+    now_mt = datetime.datetime.now(zoneinfo.ZoneInfo("America/Denver"))
+    d_start = (now_mt - datetime.timedelta(days=7)).strftime("%Y%m%d")
+    d_end = (now_mt + datetime.timedelta(days=30)).strftime("%Y%m%d")
+    dates_arg = f"&dates={d_start}-{d_end}" if "?" in extra_params else f"?dates={d_start}-{d_end}"
+    
+    url = f"https://site.web.api.espn.com/apis/site/v2/sports/{sport_category}/{api_sport}/scoreboard{extra_params}{dates_arg}"
     events = []
     
     try:
         res = session.get(url, headers=headers, timeout=15).json()
         events = res.get("events", [])
     except Exception as err:
-        st.warning(f"ESPN primary API request timed out or encountered slow network: {err}")
         events = []
 
     if not events:
         try:
-            now_mt = datetime.datetime.now(zoneinfo.ZoneInfo("America/Denver"))
-            d_start = (now_mt - datetime.timedelta(days=7)).strftime("%Y%m%d")
-            d_end = (now_mt + datetime.timedelta(days=21)).strftime("%Y%m%d")
-            dates_arg = f"&dates={d_start}-{d_end}" if "?" in extra_params else f"?dates={d_start}-{d_end}"
-            url_range = f"https://site.web.api.espn.com/apis/site/v2/sports/{sport_category}/{api_sport}/scoreboard{extra_params}{dates_arg}"
-            res_range = session.get(url_range, headers=headers, timeout=15).json()
-            events = res_range.get("events", [])
+            url_default = f"https://site.web.api.espn.com/apis/site/v2/sports/{sport_category}/{api_sport}/scoreboard{extra_params}"
+            res_default = session.get(url_default, headers=headers, timeout=15).json()
+            events = res_default.get("events", [])
         except Exception:
             pass
 
