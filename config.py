@@ -48,25 +48,39 @@ def hex_to_rgb(hex_str):
     b = int(hex_str[4:6], 16) / 255.0
     return {"red": r, "green": g, "blue": b}
 
+def get_relative_luminance(r, g, b):
+    def adjust(c):
+        c_s = c / 255.0
+        return c_s / 12.92 if c_s <= 0.03928 else ((c_s + 0.055) / 1.055) ** 2.4
+    return 0.2126 * adjust(r) + 0.7152 * adjust(g) + 0.0722 * adjust(b)
+
+def get_contrast_ratio(rgb1, rgb2):
+    l1 = get_relative_luminance(*rgb1)
+    l2 = get_relative_luminance(*rgb2)
+    lighter = max(l1, l2)
+    darker = min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
 def get_readable_text_color(bg_hex, alt_hex="FFFFFF"):
-    hex_str = bg_hex.lstrip("#")
-    if len(hex_str) != 6:
+    bg = bg_hex.lstrip("#")
+    if len(bg) != 6:
         return {"red": 1.0, "green": 1.0, "blue": 1.0}
-    r = int(hex_str[0:2], 16)
-    g = int(hex_str[2:4], 16)
-    b = int(hex_str[4:6], 16)
-    luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
-    if luminance > 0.6:
-        return {"red": 0.0, "green": 0.0, "blue": 0.0}
+    r, g, b = int(bg[0:2], 16), int(bg[2:4], 16), int(bg[4:6], 16)
+    
+    black_contrast = get_contrast_ratio((r, g, b), (0, 0, 0))
+    
+    alt = alt_hex.lstrip("#")
+    if len(alt) == 6:
+        ar, ag, ab = int(alt[0:2], 16), int(alt[2:4], 16), int(alt[4:6], 16)
+        alt_contrast = get_contrast_ratio((r, g, b), (ar, ag, ab))
+        if alt_contrast >= 4.5:
+            return {"red": ar / 255.0, "green": ag / 255.0, "blue": ab / 255.0}
+
+    white_contrast = get_contrast_ratio((r, g, b), (255, 255, 255))
+    if white_contrast >= black_contrast:
+        return {"red": 1.0, "green": 1.0, "blue": 1.0}
     else:
-        alt_str = alt_hex.lstrip("#")
-        if len(alt_str) == 6:
-            ar = int(alt_str[0:2], 16) / 255.0
-            ag = int(alt_str[2:4], 16) / 255.0
-            ab = int(alt_str[4:6], 16) / 255.0
-            if (0.299 * ar*255 + 0.587 * ag*255 + 0.114 * ab*255) / 255.0 > 0.4:
-                return {"red": ar, "green": ag, "blue": ab}
-        return {"red": 1.0, "green": 1.0, "blue": 1.0}
+        return {"red": 0.0, "green": 0.0, "blue": 0.0}
 
 def get_short_team_name(team_dict):
     name = team_dict.get("shortDisplayName") or team_dict.get("name") or team_dict.get("displayName") or ""
