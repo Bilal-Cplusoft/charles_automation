@@ -203,15 +203,15 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             updates = [
                 # Left Grid Top Logos & Headers
                 {"range": "A1", "values": [[league_logo_formula]]},
-                {"range": "D1", "values": [[g1_alogo]]},
-                {"range": "D2", "values": [[g2_alogo]]},
-                {"range": "E1", "values": [[g1_away_name]]},
-                {"range": "E2", "values": [[g2_away_name]]},
+                {"range": "C1", "values": [[g1_alogo]]},
+                {"range": "C2", "values": [[g2_alogo]]},
+                {"range": "F1", "values": [[g1_away_name]]},
+                {"range": "F2", "values": [[g2_away_name]]},
                 {"range": "M1", "values": [[community_logo_formula]]},
                 {"range": "A3", "values": [[g1_hlogo]]},
                 {"range": "B3", "values": [[g2_hlogo]]},
-                {"range": "A5", "values": [[g1_home_name]]},
-                {"range": "B5", "values": [[g2_home_name]]},
+                {"range": "A6", "values": [[g1_home_name]]},
+                {"range": "B6", "values": [[g2_home_name]]},
                 
                 # C3:D4 Cost & Game Labels (G1 / G1 / G2)
                 {"range": "C3", "values": [[cost_str]]},
