@@ -157,10 +157,14 @@ def fetch_espn_games(sport):
                     if "scoreboard" in l.get("rel", []):
                         return l.get("href", "")
                 href = logos[0].get("href", "")
+                if "countries" in href:
+                    return href
                 if "/500/" in href and "/scoreboard/" not in href:
                     return href.replace("/500/", "/500/scoreboard/")
                 return href
             logo_raw = team_dict.get("logo", "")
+            if logo_raw and "countries" in logo_raw:
+                return logo_raw
             if logo_raw and "/500/" in logo_raw and "/scoreboard/" not in logo_raw:
                 return logo_raw.replace("/500/", "/500/scoreboard/")
             return logo_raw

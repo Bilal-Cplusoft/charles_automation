@@ -406,7 +406,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                         "range": {"sheetId": new_sheet_id, "startRowIndex": 16, "endRowIndex": 19, "startColumnIndex": 3, "endColumnIndex": 16},
                         "cell": {
                             "userEnteredFormat": {
-                                "textFormat": {"bold": True, "fontSize": 10},
+                                "textFormat": {"foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}, "bold": True, "fontSize": 10},
                                 "horizontalAlignment": "CENTER",
                                 "verticalAlignment": "MIDDLE"
                             }
