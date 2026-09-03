@@ -45,6 +45,9 @@ def fetch_espn_games(sport):
     elif sport == "mlb":
         sport_category = "baseball"
         api_sport = "mlb"
+    elif sport == "nhl":
+        sport_category = "hockey"
+        api_sport = "nhl"
     elif sport == "wc":
         sport_category = "soccer"
         api_sport = "fifa.world"

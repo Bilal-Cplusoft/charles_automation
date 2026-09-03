@@ -96,7 +96,7 @@ if submit:
             gc = get_gspread_client()
             sh = gc.open_by_key(SPREADSHEET_ID)
 
-            new_tab_title = create_game_tab(
+            new_tab_title, new_sheet_id = create_game_tab(
                 sh=sh,
                 grid_format=grid_format,
                 winners=winners,
@@ -109,7 +109,8 @@ if submit:
                 game3=game3
             )
 
+            sheet_url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit#gid={new_sheet_id}"
             st.success(f"Successfully generated: {new_tab_title}")
-            st.markdown(f"**[Click here to view your Google Sheet](https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit)**")
+            st.markdown(f"**[Click here to view your Google Sheet]({sheet_url})**")
         except Exception as e:
             st.error(f"Error generating board: {e}")

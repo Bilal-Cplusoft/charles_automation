@@ -874,4 +874,4 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
     sh.batch_update(body)
     new_sheet.batch_update(updates, value_input_option="USER_ENTERED")
 
-    return new_tab_title
+    return new_tab_title, new_sheet_id

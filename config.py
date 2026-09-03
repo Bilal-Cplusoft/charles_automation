@@ -10,6 +10,7 @@ LEAGUE_LOGOS = {
     "nba": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png",
     "wnba": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/wnba.png",
     "mlb": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png",
+    "nhl": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png",
     "wc": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/fifa.png"
 }
 
@@ -22,6 +23,7 @@ SPORT_CHOICES = {
     "NBA": "nba",
     "WNBA": "wnba",
     "MLB": "mlb",
+    "NHL": "nhl",
     "World Cup": "wc"
 }
 
