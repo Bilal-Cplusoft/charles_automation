@@ -597,6 +597,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
         header_reqs = [
             {"updateDimensionProperties": {"range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 1}, "properties": {"pixelSize": 80}, "fields": "pixelSize"}},
             {"updateDimensionProperties": {"range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 1, "endIndex": 2}, "properties": {"pixelSize": 50}, "fields": "pixelSize"}},
+            {"updateDimensionProperties": {"range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 12, "endIndex": 14}, "properties": {"pixelSize": 35}, "fields": "pixelSize"}},
         ]
     
         header_reqs += [
