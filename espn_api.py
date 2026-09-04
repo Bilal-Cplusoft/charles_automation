@@ -151,23 +151,34 @@ def fetch_espn_games(sport):
         raw_home_alt   = home_team.get("alternateColor", "FFFFFF").lstrip("#")
 
         def get_transparent_logo(team_dict):
+            def format_url(url):
+                if not url:
+                    return ""
+                if "ncaa" in url and "combiner" not in url and ("/500/" in url or "/500-dark/" in url):
+                    path_part = url.split("/i/teamlogos/")[-1] if "/i/teamlogos/" in url else url.split("espncdn.com/")[-1]
+                    return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/{path_part}&w=500&h=500"
+                return url
+
             logos = team_dict.get("logos", [])
             if logos:
                 for l in logos:
+                    if "dark" in l.get("rel", []):
+                        return format_url(l.get("href", ""))
+                for l in logos:
                     if "scoreboard" in l.get("rel", []):
-                        return l.get("href", "")
+                        return format_url(l.get("href", ""))
                 href = logos[0].get("href", "")
                 if "countries" in href or "ncaa" in href:
-                    return href
+                    return format_url(href)
                 if "/500/" in href and "/scoreboard/" not in href:
-                    return href.replace("/500/", "/500/scoreboard/")
-                return href
+                    return format_url(href.replace("/500/", "/500/scoreboard/"))
+                return format_url(href)
             logo_raw = team_dict.get("logo", "")
             if logo_raw and ("countries" in logo_raw or "ncaa" in logo_raw):
-                return logo_raw
+                return format_url(logo_raw)
             if logo_raw and "/500/" in logo_raw and "/scoreboard/" not in logo_raw:
-                return logo_raw.replace("/500/", "/500/scoreboard/")
-            return logo_raw
+                return format_url(logo_raw.replace("/500/", "/500/scoreboard/"))
+            return format_url(logo_raw)
 
         away_logo_raw = get_transparent_logo(away_team)
         home_logo_raw = get_transparent_logo(home_team)
