@@ -1,7 +1,7 @@
 import os
 
-SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "1PuKW9cDf9jzSsiSpzMUkJLwhbCtKWe0Y76yt_FGG4vc")
-TEMPLATE_SHEET_ID = 1594614647
+SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "1-WQ0VgstruoHwlnXRJu6SvB7FzhlZWZ0iG5layzDLKQ")
+TEMPLATE_SHEET_ID = 479481699
 
 LEAGUE_LOGOS = {
     "ncaaf": "https://a.espncdn.com/i/espn/misc_logos/500/ncaa.png",
