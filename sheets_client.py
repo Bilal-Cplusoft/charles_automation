@@ -267,6 +267,26 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     }
                 }
 
+            def get_border_for_bg(bg):
+                r = bg.get("red", 0.0)
+                g = bg.get("green", 0.0)
+                b = bg.get("blue", 0.0)
+                if (r + g + b) < 0.25:
+                    color = {"red": 1.0, "green": 1.0, "blue": 1.0}
+                else:
+                    color = {"red": 0.0, "green": 0.0, "blue": 0.0}
+                return {"style": "SOLID", "color": color}
+
+            def req_strip_border(r1, r2, c1, c2, bg):
+                b_spec = get_border_for_bg(bg)
+                return {
+                    "updateBorders": {
+                        "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                        "top": b_spec, "bottom": b_spec, "left": b_spec, "right": b_spec,
+                        "innerHorizontal": b_spec, "innerVertical": b_spec
+                    }
+                }
+
             payout_merge_reqs.extend([
                 # Unmerge Row 3 & Row 4 horizontal number cells (E3:N4)
                 {"unmergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 4, "startColumnIndex": 4, "endColumnIndex": 14}}},
@@ -285,10 +305,11 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 # Top Right Breaking Fire Logo M1:N2 BLACK Background
                 req_bg_txt(0, 2, 12, 14, black_bg, white_rgb),
 
-                # Horizontal Number Rows E3:N3 (Game 1 Away Color) & E4:N4 (Game 2 Away Color) with White Borders
+                # Horizontal Number Rows E3:N3 (Game 1 Away Color) & E4:N4 (Game 2 Away Color)
                 req_bg_txt(2, 3, 4, 14, g1_a_bg, g1_a_txt),
+                req_strip_border(2, 3, 4, 14, g1_a_bg),
                 req_bg_txt(3, 4, 4, 14, g2_a_bg, g2_a_txt),
-                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 4, "startColumnIndex": 4, "endColumnIndex": 14}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
+                req_strip_border(3, 4, 4, 14, g2_a_bg),
                 
                 # Home 1 Logo A3:A4 & Home 2 Logo B3:B4
                 req_bg_txt(2, 4, 0, 1, white_bg, black_bg),
@@ -298,10 +319,11 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 req_bg_txt(4, 14, 0, 1, g1_h_bg, g1_h_txt),
                 req_bg_txt(4, 14, 1, 2, g2_h_bg, g2_h_txt),
 
-                # Vertical Number Columns C5:C14 (Game 1 Home Color) & D5:D14 (Game 2 Home Color) with White Borders
+                # Vertical Number Columns C5:C14 (Game 1 Home Color) & D5:D14 (Game 2 Home Color)
                 req_bg_txt(4, 14, 2, 3, g1_h_bg, g1_h_txt),
+                req_strip_border(4, 14, 2, 3, g1_h_bg),
                 req_bg_txt(4, 14, 3, 4, g2_h_bg, g2_h_txt),
-                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 4, "endRowIndex": 14, "startColumnIndex": 2, "endColumnIndex": 4}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
+                req_strip_border(4, 14, 3, 4, g2_h_bg),
 
                 {"updateDimensionProperties": {
                     "range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 2},
@@ -398,18 +420,22 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 req_title_fmt(2, 3, 6, 16, g3_a_bg, g3_a_txt, font_size=24), # G3:P3 (Left Away 3)
                 
                 req_bg(3, 4, 6, 16, g1_a_bg, g1_a_txt), # G4:P4 (Left Away 1 strip)
+                req_strip_border(3, 4, 6, 16, g1_a_bg),
                 req_bg(4, 5, 6, 16, g2_a_bg, g2_a_txt), # G5:P5 (Left Away 2 strip)
+                req_strip_border(4, 5, 6, 16, g2_a_bg),
                 req_bg(5, 6, 6, 16, g3_a_bg, g3_a_txt), # G6:P6 (Left Away 3 strip)
-                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 3, "endRowIndex": 6, "startColumnIndex": 6, "endColumnIndex": 16}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
+                req_strip_border(5, 6, 6, 16, g3_a_bg),
 
                 req_bg(6, 16, 0, 1, g1_h_bg, g1_h_txt), # A7:A16 (Left Home 1)
                 req_bg(6, 16, 1, 2, g2_h_bg, g2_h_txt), # B7:B16 (Left Home 2)
                 req_bg(6, 16, 2, 3, g3_h_bg, g3_h_txt), # C7:C16 (Left Home 3)
 
                 req_bg(6, 16, 3, 4, g1_h_bg, g1_h_txt), # D7:D16 (Left Home 1 strip)
+                req_strip_border(6, 16, 3, 4, g1_h_bg),
                 req_bg(6, 16, 4, 5, g2_h_bg, g2_h_txt), # E7:E16 (Left Home 2 strip)
+                req_strip_border(6, 16, 4, 5, g2_h_bg),
                 req_bg(6, 16, 5, 6, g3_h_bg, g3_h_txt), # F7:F16 (Left Home 3 strip)
-                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 6, "endRowIndex": 16, "startColumnIndex": 3, "endColumnIndex": 6}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
+                req_strip_border(6, 16, 5, 6, g3_h_bg),
                 
                 {
                     "repeatCell": {
@@ -462,7 +488,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             {"range": "E1", "values": [[game.get("away_name", "")]]},
             {"range": "K1", "values": [[community_logo_formula]]},
             {"range": "A2", "values": [[home_logo_formula]]},
-            {"range": "A3", "values": [[game.get("home_name", "")]]},
+            {"range": "A5", "values": [[game.get("home_name", "")]]},
             {"range": "A13", "values": [[community_logo_formula]]},
             {"range": "B13", "values": [[clean_time(game.get("game_time", ""))]]},
 
@@ -471,7 +497,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             {"range": "U1", "values": [[game.get("away_name", "")]]},
             {"range": "AA1", "values": [[community_logo_formula]]},
             {"range": "Q2", "values": [[home_logo_formula]]},
-            {"range": "Q3", "values": [[game.get("home_name", "")]]},
+            {"range": "Q5", "values": [[game.get("home_name", "")]]},
             {"range": "Q13", "values": [[community_logo_formula]]},
             {"range": "R13", "values": [[clean_time(game.get("game_time", ""))]]},
 
@@ -625,12 +651,14 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 1, "endColumnIndex": 4}, "mergeType": "MERGE_ALL"}},
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 4, "endColumnIndex": 10}, "mergeType": "MERGE_ALL"}},
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 10, "endColumnIndex": 12}, "mergeType": "MERGE_ALL"}},
-            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 4, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 4, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
 
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 17, "endColumnIndex": 20}, "mergeType": "MERGE_ALL"}},
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 20, "endColumnIndex": 26}, "mergeType": "MERGE_ALL"}},
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 26, "endColumnIndex": 28}, "mergeType": "MERGE_ALL"}},
-            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 4, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
+            {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 4, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 0, "endColumnIndex": 1}, "mergeType": "MERGE_ALL"}},
             {"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 16, "endColumnIndex": 17}, "mergeType": "MERGE_ALL"}},
         ]
@@ -664,7 +692,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             },
             {
                 "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": 1},
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 4, "startColumnIndex": 0, "endColumnIndex": 1},
                     "cell": {
                         "userEnteredFormat": {
                             "backgroundColor": white_rgb,
@@ -716,7 +744,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             },
             {
                 "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 16, "endColumnIndex": 17},
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 4, "startColumnIndex": 16, "endColumnIndex": 17},
                     "cell": {
                         "userEnteredFormat": {
                             "backgroundColor": white_rgb,
@@ -773,7 +801,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             },
             {
                 "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1},
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 4, "endRowIndex": 12, "startColumnIndex": 0, "endColumnIndex": 1},
                     "cell": {
                         "userEnteredFormat": {
                             "backgroundColor": home_rgb,
@@ -788,7 +816,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
             },
             {
                 "repeatCell": {
-                    "range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17},
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": 4, "endRowIndex": 12, "startColumnIndex": 16, "endColumnIndex": 17},
                     "cell": {
                         "userEnteredFormat": {
                             "backgroundColor": home_rgb,
@@ -886,6 +914,27 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     }
                 },
             ])
+
+        def get_single_border_req(r1, r2, c1, c2, bg):
+            r = bg.get("red", 0.0)
+            g = bg.get("green", 0.0)
+            b = bg.get("blue", 0.0)
+            color = {"red": 1.0, "green": 1.0, "blue": 1.0} if (r + g + b) < 0.25 else {"red": 0.0, "green": 0.0, "blue": 0.0}
+            b_spec = {"style": "SOLID", "color": color}
+            return {
+                "updateBorders": {
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                    "top": b_spec, "bottom": b_spec, "left": b_spec, "right": b_spec,
+                    "innerHorizontal": b_spec, "innerVertical": b_spec
+                }
+            }
+
+        header_reqs.extend([
+            get_single_border_req(1, 2, 2, 12, away_rgb),
+            get_single_border_req(1, 2, 18, 28, away_rgb),
+            get_single_border_req(2, 12, 1, 2, home_rgb),
+            get_single_border_req(2, 12, 17, 18, home_rgb),
+        ])
     
     
 
