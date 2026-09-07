@@ -88,10 +88,10 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
         new_tab_title = base_tab_title
     else:
         counter = 2
-        candidate = f"{base_tab_title}{counter}"
+        candidate = f"{base_tab_title}-{counter}"
         while norm_title(candidate) in existing_normalized:
             counter += 1
-            candidate = f"{base_tab_title}{counter}"
+            candidate = f"{base_tab_title}-{counter}"
         new_tab_title = candidate
 
     dup_req = {
@@ -285,9 +285,10 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 # Top Right Breaking Fire Logo M1:N2 BLACK Background
                 req_bg_txt(0, 2, 12, 14, black_bg, white_rgb),
 
-                # Horizontal Number Rows E3:N3 (Game 1 Away Color) & E4:N4 (Game 2 Away Color)
+                # Horizontal Number Rows E3:N3 (Game 1 Away Color) & E4:N4 (Game 2 Away Color) with White Borders
                 req_bg_txt(2, 3, 4, 14, g1_a_bg, g1_a_txt),
                 req_bg_txt(3, 4, 4, 14, g2_a_bg, g2_a_txt),
+                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 4, "startColumnIndex": 4, "endColumnIndex": 14}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
                 
                 # Home 1 Logo A3:A4 & Home 2 Logo B3:B4
                 req_bg_txt(2, 4, 0, 1, white_bg, black_bg),
@@ -297,9 +298,10 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 req_bg_txt(4, 14, 0, 1, g1_h_bg, g1_h_txt),
                 req_bg_txt(4, 14, 1, 2, g2_h_bg, g2_h_txt),
 
-                # Vertical Number Columns C5:C14 (Game 1 Home Color) & D5:D14 (Game 2 Home Color)
+                # Vertical Number Columns C5:C14 (Game 1 Home Color) & D5:D14 (Game 2 Home Color) with White Borders
                 req_bg_txt(4, 14, 2, 3, g1_h_bg, g1_h_txt),
                 req_bg_txt(4, 14, 3, 4, g2_h_bg, g2_h_txt),
+                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 4, "endRowIndex": 14, "startColumnIndex": 2, "endColumnIndex": 4}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
 
                 {"updateDimensionProperties": {
                     "range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 2},
@@ -398,6 +400,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 req_bg(3, 4, 6, 16, g1_a_bg, g1_a_txt), # G4:P4 (Left Away 1 strip)
                 req_bg(4, 5, 6, 16, g2_a_bg, g2_a_txt), # G5:P5 (Left Away 2 strip)
                 req_bg(5, 6, 6, 16, g3_a_bg, g3_a_txt), # G6:P6 (Left Away 3 strip)
+                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 3, "endRowIndex": 6, "startColumnIndex": 6, "endColumnIndex": 16}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
 
                 req_bg(6, 16, 0, 1, g1_h_bg, g1_h_txt), # A7:A16 (Left Home 1)
                 req_bg(6, 16, 1, 2, g2_h_bg, g2_h_txt), # B7:B16 (Left Home 2)
@@ -406,6 +409,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 req_bg(6, 16, 3, 4, g1_h_bg, g1_h_txt), # D7:D16 (Left Home 1 strip)
                 req_bg(6, 16, 4, 5, g2_h_bg, g2_h_txt), # E7:E16 (Left Home 2 strip)
                 req_bg(6, 16, 5, 6, g3_h_bg, g3_h_txt), # F7:F16 (Left Home 3 strip)
+                {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": 6, "endRowIndex": 16, "startColumnIndex": 3, "endColumnIndex": 6}, "top": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "bottom": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "left": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "right": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerHorizontal": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}, "innerVertical": {"style": "SOLID", "color": {"red": 1.0, "green": 1.0, "blue": 1.0}}}},
                 
                 {
                     "repeatCell": {
