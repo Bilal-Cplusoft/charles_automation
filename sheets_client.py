@@ -53,29 +53,46 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
         return f"{val}MT"
 
     if grid_format.startswith("3n1_grid"):
-        new_tab_title = f"{today_label} {sport.upper()} 3n1"
+        base_tab_title = f"{today_label} {sport.upper()} 3n1"
         try:
             source_ws = sh.worksheet("3n1")
             source_sheet_id = source_ws.id
         except Exception:
             source_sheet_id = TEMPLATE_SHEET_ID
     elif grid_format.startswith("2n1_grid"):
-        new_tab_title = f"{today_label} {sport.upper()} 2n1"
+        base_tab_title = f"{today_label} {sport.upper()} 2n1"
         try:
             source_ws = sh.worksheet("2n1")
             source_sheet_id = source_ws.id
         except Exception:
             source_sheet_id = TEMPLATE_SHEET_ID
     else:
-        new_tab_title = f"{today_label} ${cost} {sport.upper()} {game['away_abbrev'].lower()}/{game['home_abbrev'].lower()}"
+        base_tab_title = f"{today_label} ${cost} {sport.upper()} {game['away_abbrev'].lower()}/{game['home_abbrev'].lower()}"
         source_sheet_id = TEMPLATE_SHEET_ID
 
+    import re
+    def norm_title(t):
+        return re.sub(r'\s+', ' ', t.strip()).lower()
+
+    existing_normalized = set()
     for ws in sh.worksheets():
-        if ws.title == new_tab_title or ws.title.startswith(f"{new_tab_title}_conflict"):
+        if "_conflict" in ws.title:
             try:
                 sh.del_worksheet(ws)
             except Exception:
                 pass
+        else:
+            existing_normalized.add(norm_title(ws.title))
+
+    if norm_title(base_tab_title) not in existing_normalized:
+        new_tab_title = base_tab_title
+    else:
+        counter = 2
+        candidate = f"{base_tab_title}{counter}"
+        while norm_title(candidate) in existing_normalized:
+            counter += 1
+            candidate = f"{base_tab_title}{counter}"
+        new_tab_title = candidate
 
     dup_req = {
         "requests": [
@@ -258,23 +275,23 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 req_bg_txt(0, 2, 0, 2, black_bg, white_rgb),
 
                 # Away 1 Logo C1:D1 & Away 1 Name E1:L1 (Game 1 Away Color)
-                req_bg_txt(0, 1, 2, 4, g1_a_bg, g1_a_txt),
+                req_bg_txt(0, 1, 2, 4, white_bg, black_bg),
                 req_title_fmt(0, 1, 4, 12, g1_a_bg, g1_a_txt, font_size=28),
 
                 # Away 2 Logo C2:D2 & Away 2 Name E2:L2 (Game 2 Away Color)
-                req_bg_txt(1, 2, 2, 4, g2_a_bg, g2_a_txt),
+                req_bg_txt(1, 2, 2, 4, white_bg, black_bg),
                 req_title_fmt(1, 2, 4, 12, g2_a_bg, g2_a_txt, font_size=28),
 
-                # Top Right Breaking Fire Logo M1:N2 WHITE Background
-                req_bg_txt(0, 2, 12, 14, white_bg, black_bg),
+                # Top Right Breaking Fire Logo M1:N2 BLACK Background
+                req_bg_txt(0, 2, 12, 14, black_bg, white_rgb),
 
                 # Horizontal Number Rows E3:N3 (Game 1 Away Color) & E4:N4 (Game 2 Away Color)
                 req_bg_txt(2, 3, 4, 14, g1_a_bg, g1_a_txt),
                 req_bg_txt(3, 4, 4, 14, g2_a_bg, g2_a_txt),
                 
                 # Home 1 Logo A3:A4 & Home 2 Logo B3:B4
-                req_bg_txt(2, 4, 0, 1, g1_h_bg, g1_h_txt),
-                req_bg_txt(2, 4, 1, 2, g2_h_bg, g2_h_txt),
+                req_bg_txt(2, 4, 0, 1, white_bg, black_bg),
+                req_bg_txt(2, 4, 1, 2, white_bg, black_bg),
 
                 # Home 1 Name A5:A14 & Home 2 Name B5:B14
                 req_bg_txt(4, 14, 0, 1, g1_h_bg, g1_h_txt),
@@ -366,13 +383,13 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                         "fields": "userEnteredFormat(backgroundColor,borders)"
                     }
                 },
-                req_bg(0, 1, 3, 4, g1_a_bg, g1_a_txt), # D1 Away 1 logo bg
-                req_bg(1, 2, 3, 4, g2_a_bg, g2_a_txt), # D2 Away 2 logo bg
-                req_bg(2, 3, 3, 4, g3_a_bg, g3_a_txt), # D3 Away 3 logo bg
+                req_bg(0, 1, 3, 4, white_bg, black_bg), # D1 Away 1 logo bg
+                req_bg(1, 2, 3, 4, white_bg, black_bg), # D2 Away 2 logo bg
+                req_bg(2, 3, 3, 4, white_bg, black_bg), # D3 Away 3 logo bg
                 
-                req_bg(3, 4, 0, 1, g1_h_bg, g1_h_txt), # A4 Home 1 logo bg
-                req_bg(3, 4, 1, 2, g2_h_bg, g2_h_txt), # B4 Home 2 logo bg
-                req_bg(3, 4, 2, 3, g3_h_bg, g3_h_txt), # C4 Home 3 logo bg
+                req_bg(3, 4, 0, 1, white_bg, black_bg), # A4 Home 1 logo bg
+                req_bg(3, 4, 1, 2, white_bg, black_bg), # B4 Home 2 logo bg
+                req_bg(3, 4, 2, 3, white_bg, black_bg), # C4 Home 3 logo bg
 
                 req_title_fmt(0, 1, 6, 16, g1_a_bg, g1_a_txt, font_size=24), # G1:P1 (Left Away 1)
                 req_title_fmt(1, 2, 6, 16, g2_a_bg, g2_a_txt, font_size=24), # G2:P2 (Left Away 2)
@@ -620,7 +637,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 1, "endColumnIndex": 4},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": away_rgb,
+                            "backgroundColor": white_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -633,7 +650,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 10, "endColumnIndex": 12},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": away_rgb,
+                            "backgroundColor": black_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -646,7 +663,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 0, "endColumnIndex": 1},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": home_rgb,
+                            "backgroundColor": white_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -659,7 +676,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 0, "endColumnIndex": 1},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": home_rgb,
+                            "backgroundColor": black_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -672,7 +689,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 17, "endColumnIndex": 20},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": away_rgb,
+                            "backgroundColor": white_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -685,7 +702,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 0, "endRowIndex": 1, "startColumnIndex": 26, "endColumnIndex": 28},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": away_rgb,
+                            "backgroundColor": black_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -698,7 +715,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 2, "startColumnIndex": 16, "endColumnIndex": 17},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": home_rgb,
+                            "backgroundColor": white_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
@@ -711,7 +728,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": 14, "startColumnIndex": 16, "endColumnIndex": 17},
                     "cell": {
                         "userEnteredFormat": {
-                            "backgroundColor": home_rgb,
+                            "backgroundColor": black_rgb,
                             "horizontalAlignment": "CENTER",
                             "verticalAlignment": "MIDDLE"
                         }
