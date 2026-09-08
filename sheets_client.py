@@ -207,6 +207,51 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 }
             }
 
+        white_bg  = {"red": 1.0, "green": 1.0, "blue": 1.0}
+        white_rgb = white_bg
+        black_bg  = {"red": 0.0, "green": 0.0, "blue": 0.0}
+
+        def req_bg_txt(r1, r2, c1, c2, bg, txt, font_size=30):
+            return {
+                "repeatCell": {
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                    "cell": {
+                        "userEnteredFormat": {
+                            "backgroundColor": bg,
+                            "horizontalAlignment": "CENTER",
+                            "verticalAlignment": "MIDDLE",
+                            "textFormat": {"foregroundColor": txt, "bold": True, "fontSize": font_size}
+                        }
+                    },
+                    "fields": "userEnteredFormat(backgroundColor,horizontalAlignment,verticalAlignment,textFormat)"
+                }
+            }
+
+        def get_border_for_bg(bg):
+            r = bg.get("red", 0.0)
+            g = bg.get("green", 0.0)
+            b = bg.get("blue", 0.0)
+            if (r + g + b) < 0.25:
+                color = {"red": 1.0, "green": 1.0, "blue": 1.0}
+            else:
+                color = {"red": 0.0, "green": 0.0, "blue": 0.0}
+            return {"style": "SOLID", "color": color}
+
+        def req_strip_border(r1, r2, c1, c2, bg, include_inner_h=True):
+            b_spec = get_border_for_bg(bg)
+            borders = {
+                "top": b_spec, "bottom": b_spec, "left": b_spec, "right": b_spec
+            }
+            if include_inner_h:
+                borders["innerHorizontal"] = b_spec
+                borders["innerVertical"] = b_spec
+            return {
+                "updateBorders": {
+                    "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                    **borders
+                }
+            }
+
         if grid_format.startswith("2n1_grid"):
             per_game_pool = net_payout_pool // 2
             p1 = int(round((per_game_pool * 0.18) / 5.0) * 5)
@@ -254,39 +299,6 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 {"range": "M16", "values": [[f"FS: {p_fs}"]]},
             ]
 
-            white_bg  = {"red": 1.0, "green": 1.0, "blue": 1.0}
-            white_rgb = white_bg
-            black_bg  = {"red": 0.0, "green": 0.0, "blue": 0.0}
-
-            def req_bg_txt(r1, r2, c1, c2, bg, txt):
-                return {
-                    "repeatCell": {
-                        "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
-                        "cell": {"userEnteredFormat": {"backgroundColor": bg, "textFormat": {"foregroundColor": txt}}},
-                        "fields": "userEnteredFormat(backgroundColor,textFormat.foregroundColor)"
-                    }
-                }
-
-            def get_border_for_bg(bg):
-                r = bg.get("red", 0.0)
-                g = bg.get("green", 0.0)
-                b = bg.get("blue", 0.0)
-                if (r + g + b) < 0.25:
-                    color = {"red": 1.0, "green": 1.0, "blue": 1.0}
-                else:
-                    color = {"red": 0.0, "green": 0.0, "blue": 0.0}
-                return {"style": "SOLID", "color": color}
-
-            def req_strip_border(r1, r2, c1, c2, bg):
-                b_spec = get_border_for_bg(bg)
-                return {
-                    "updateBorders": {
-                        "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
-                        "top": b_spec, "bottom": b_spec, "left": b_spec, "right": b_spec,
-                        "innerHorizontal": b_spec, "innerVertical": b_spec
-                    }
-                }
-
             payout_merge_reqs.extend([
                 # Unmerge Row 3 & Row 4 horizontal number cells (E3:N4)
                 {"unmergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": 2, "endRowIndex": 4, "startColumnIndex": 4, "endColumnIndex": 14}}},
@@ -316,14 +328,12 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                 req_bg_txt(2, 4, 1, 2, white_bg, black_bg),
 
                 # Home 1 Name A5:A14 & Home 2 Name B5:B14
-                req_bg_txt(4, 14, 0, 1, g1_h_bg, g1_h_txt),
-                req_bg_txt(4, 14, 1, 2, g2_h_bg, g2_h_txt),
+                req_bg_txt(4, 14, 0, 1, g1_h_bg, g1_h_txt, font_size=28),
+                req_bg_txt(4, 14, 1, 2, g2_h_bg, g2_h_txt, font_size=28),
 
                 # Vertical Number Columns C5:C14 (Game 1 Home Color) & D5:D14 (Game 2 Home Color)
-                req_bg_txt(4, 14, 2, 3, g1_h_bg, g1_h_txt),
-                req_strip_border(4, 14, 2, 3, g1_h_bg),
-                req_bg_txt(4, 14, 3, 4, g2_h_bg, g2_h_txt),
-                req_strip_border(4, 14, 3, 4, g2_h_bg),
+                req_bg_txt(4, 14, 2, 3, g1_h_bg, g1_h_txt, font_size=30),
+                req_bg_txt(4, 14, 3, 4, g2_h_bg, g2_h_txt, font_size=30),
 
                 {"updateDimensionProperties": {
                     "range": {"sheetId": new_sheet_id, "dimension": "ROWS", "startIndex": 0, "endIndex": 2},
@@ -331,6 +341,53 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "fields": "pixelSize"
                 }},
             ])
+
+            # Apply per-spot-row contrast borders for vertical number columns C5:C14 & D5:D14
+            for r_i in range(5):
+                r1 = 4 + r_i * 2
+                r2 = r1 + 2
+                payout_merge_reqs.append(req_strip_border(r1, r2, 2, 3, g1_h_bg, include_inner_h=False))
+                payout_merge_reqs.append(req_strip_border(r1, r2, 3, 4, g2_h_bg, include_inner_h=False))
+
+            # Format 25 spots E5:N14 with clean white background, 18pt bold centered text, and outer borders
+            spot_num = 1
+            for r_i in range(5):
+                for c_i in range(5):
+                    r1 = 4 + r_i * 2
+                    r2 = r1 + 2
+                    c1 = 4 + c_i * 2
+                    c2 = c1 + 2
+                    payout_merge_reqs.append({
+                        "mergeCells": {
+                            "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                            "mergeType": "MERGE_ALL"
+                        }
+                    })
+                    payout_merge_reqs.append({
+                        "repeatCell": {
+                            "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                            "cell": {
+                                "userEnteredFormat": {
+                                    "backgroundColor": white_bg,
+                                    "horizontalAlignment": "CENTER",
+                                    "verticalAlignment": "MIDDLE",
+                                    "textFormat": {"foregroundColor": black_bg, "bold": True, "fontSize": 18}
+                                }
+                            },
+                            "fields": "userEnteredFormat(backgroundColor,horizontalAlignment,verticalAlignment,textFormat)"
+                        }
+                    })
+                    payout_merge_reqs.append({
+                        "updateBorders": {
+                            "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
+                            "top": {"style": "SOLID", "color": black_bg},
+                            "bottom": {"style": "SOLID", "color": black_bg},
+                            "left": {"style": "SOLID", "color": black_bg},
+                            "right": {"style": "SOLID", "color": black_bg}
+                        }
+                    })
+                    updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1 + 1), "values": [[str(spot_num)]]})
+                    spot_num += 1
 
         else: # 3n1_grid
             if grid_format.startswith("3n1_grid") or cost == 36:
@@ -863,7 +920,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                         "cell": {
                             "userEnteredFormat": {
                                 "backgroundColor": away_rgb,
-                                "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 12},
+                                "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 30},
                                 "horizontalAlignment": "CENTER",
                                 "verticalAlignment": "MIDDLE"
                             }
@@ -877,7 +934,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                         "cell": {
                             "userEnteredFormat": {
                                 "backgroundColor": away_rgb,
-                                "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 12},
+                                "textFormat": {"foregroundColor": away_text_rgb, "bold": True, "fontSize": 30},
                                 "horizontalAlignment": "CENTER",
                                 "verticalAlignment": "MIDDLE"
                             }
@@ -891,7 +948,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                         "cell": {
                             "userEnteredFormat": {
                                 "backgroundColor": home_rgb,
-                                "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 12},
+                                "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 30},
                                 "horizontalAlignment": "CENTER",
                                 "verticalAlignment": "MIDDLE"
                             }
@@ -905,7 +962,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                         "cell": {
                             "userEnteredFormat": {
                                 "backgroundColor": home_rgb,
-                                "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 12},
+                                "textFormat": {"foregroundColor": home_text_rgb, "bold": True, "fontSize": 30},
                                 "horizontalAlignment": "CENTER",
                                 "verticalAlignment": "MIDDLE"
                             }

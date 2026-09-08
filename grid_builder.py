@@ -21,10 +21,10 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
     for lc, rc in [(2, 12), (18, 28)]:
         reqs.append({"repeatCell": {"range": {"sheetId": new_sheet_id, "startRowIndex": 1, "endRowIndex": 13, "startColumnIndex": lc, "endColumnIndex": rc}, "cell": {"userEnteredFormat": {"borders": {"top": none_b, "bottom": none_b, "left": none_b, "right": none_b}}}, "fields": "userEnteredFormat.borders"}})
 
-    def fmt(r1, r2, c1, c2, bg, txt=None):
+    def fmt(r1, r2, c1, c2, bg, txt=None, font_size=12):
         return {"repeatCell": {
             "range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2},
-            "cell": {"userEnteredFormat": {"backgroundColor": bg, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE", "textFormat": {"foregroundColor": txt if txt else black_rgb, "bold": True, "fontSize": 12}}},
+            "cell": {"userEnteredFormat": {"backgroundColor": bg, "horizontalAlignment": "CENTER", "verticalAlignment": "MIDDLE", "textFormat": {"foregroundColor": txt if txt else black_rgb, "bold": True, "fontSize": font_size}}},
             "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)"
         }}
 
@@ -34,13 +34,13 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
     def grid_border(r1, r2, c1, c2):
         return {"updateBorders": {"range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1, "endColumnIndex": c2}, "top": solid, "bottom": solid, "left": solid, "right": solid, "innerHorizontal": solid, "innerVertical": solid}}
 
-    def paint(r1, r2, c1_l, c2_l, c1_r, c2_r, bg, spot_num, txt=None, left_blank=False):
+    def paint(r1, r2, c1_l, c2_l, c1_r, c2_r, bg, spot_num, txt=None, left_blank=False, font_size=12):
         if (r2 - r1 > 1) or (c2_l - c1_l > 1):
             reqs.append({"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1_l, "endColumnIndex": c2_l}, "mergeType": "MERGE_ALL"}})
             reqs.append({"mergeCells": {"range": {"sheetId": new_sheet_id, "startRowIndex": r1, "endRowIndex": r2, "startColumnIndex": c1_r, "endColumnIndex": c2_r}, "mergeType": "MERGE_ALL"}})
-        reqs.append(fmt(r1, r2, c1_l, c2_l, bg, txt))
+        reqs.append(fmt(r1, r2, c1_l, c2_l, bg, txt, font_size=font_size))
         reqs.append(spot_border(r1, r2, c1_l, c2_l))
-        reqs.append(fmt(r1, r2, c1_r, c2_r, bg, txt))
+        reqs.append(fmt(r1, r2, c1_r, c2_r, bg, txt, font_size=font_size))
         reqs.append(spot_border(r1, r2, c1_r, c2_r))
         left_val = "" if left_blank else str(spot_num)
         updates.append({"range": gspread.utils.rowcol_to_a1(r1 + 1, c1_l + 1), "values": [[left_val]]})
@@ -49,12 +49,12 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
     if grid_format == "10_spot":
         for i in range(10):
             r1 = 2 + i
-            paint(r1, r1 + 1, 2, 12, 18, 28, colors[i % 2], i + 1)
+            paint(r1, r1 + 1, 2, 12, 18, 28, colors[i % 2], i + 1, font_size=14)
 
     elif grid_format == "5_spot":
         for i in range(5):
             r1 = 2 + i * 2
-            paint(r1, r1 + 2, 2, 12, 18, 28, colors[i % 2], i + 1)
+            paint(r1, r1 + 2, 2, 12, 18, 28, colors[i % 2], i + 1, font_size=18)
 
     elif grid_format == "50_spot":
         spot_idx = 0
@@ -73,7 +73,7 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
                 r1   = 2 + r_i * 2
                 c1_l = 2  + c_i * 2
                 c1_r = 18 + c_i * 2
-                paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, colors[spot_idx % 2], spot_idx + 1)
+                paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, colors[spot_idx % 2], spot_idx + 1, font_size=18)
                 spot_idx += 1
 
     elif grid_format == "3n1_grid":
@@ -83,7 +83,7 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
                 r1   = 6 + r_i
                 c1_l = 3 + c_i
                 c1_r = 19 + c_i
-                paint(r1, r1 + 1, c1_l, c1_l + 1, c1_r, c1_r + 1, colors[spot_idx % 2], spot_idx + 1, left_blank=True)
+                paint(r1, r1 + 1, c1_l, c1_l + 1, c1_r, c1_r + 1, colors[spot_idx % 2], spot_idx + 1, left_blank=True, font_size=18)
                 spot_idx += 1
 
     elif grid_format == "4_spot":
@@ -93,7 +93,7 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
         for idx in range(4):
             r1, r2, c1_l, c2_l = quads_l[idx]
             _,  _,  c1_r, c2_r = quads_r[idx]
-            paint(r1, r2, c1_l, c2_l, c1_r, c2_r, quad_bg[idx], idx + 1)
+            paint(r1, r2, c1_l, c2_l, c1_r, c2_r, quad_bg[idx], idx + 1, font_size=18)
 
     elif grid_format == "bankrupt_spot":
         spot_idx = 0
@@ -103,9 +103,9 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
                 c1_l = 2  + c_i * 2
                 c1_r = 18 + c_i * 2
                 if r_i == 2 and c_i == 2:
-                    paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, bk_rgb, "Bankrupt", bk_txt_rgb)
+                    paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, bk_rgb, "Bankrupt", bk_txt_rgb, font_size=18)
                 else:
-                    paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, colors[spot_idx % 2], spot_idx + 1)
+                    paint(r1, r1 + 2, c1_l, c1_l + 2, c1_r, c1_r + 2, colors[spot_idx % 2], spot_idx + 1, font_size=18)
                 spot_idx += 1
 
     else:
