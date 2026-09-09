@@ -93,7 +93,7 @@ def generate_spot_grid_requests(grid_format, new_sheet_id):
         for idx in range(4):
             r1, r2, c1_l, c2_l = quads_l[idx]
             _,  _,  c1_r, c2_r = quads_r[idx]
-            paint(r1, r2, c1_l, c2_l, c1_r, c2_r, quad_bg[idx], idx + 1, font_size=18)
+            paint(r1, r2, c1_l, c2_l, c1_r, c2_r, quad_bg[idx], idx + 1, font_size=30)
 
     elif grid_format == "bankrupt_spot":
         spot_idx = 0
