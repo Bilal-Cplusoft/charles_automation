@@ -510,7 +510,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                         "range": {"sheetId": new_sheet_id, "startRowIndex": 16, "endRowIndex": 19, "startColumnIndex": 3, "endColumnIndex": 16},
                         "cell": {
                             "userEnteredFormat": {
-                                "textFormat": {"foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}, "bold": True, "fontSize": 10},
+                                "textFormat": {"foregroundColor": {"red": 1.0, "green": 1.0, "blue": 1.0}, "bold": True, "fontSize": 15},
                                 "horizontalAlignment": "CENTER",
                                 "verticalAlignment": "MIDDLE"
                             }
@@ -645,11 +645,11 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
 
     new_sheet = sh.get_worksheet_by_id(new_sheet_id)
     if grid_format.startswith("3n1_grid"):
-        new_sheet.batch_clear(["Q1:S25", "E25:H29"])
+        new_sheet.batch_clear(["Q1:S25", "E25:I30"])
     elif grid_format.startswith("2n1_grid"):
-        new_sheet.batch_clear(["E25:H29"])
+        new_sheet.batch_clear(["E25:I30"])
     else:
-        new_sheet.batch_clear(["C3:L12", "S3:AB12", "C13:L15", "S13:AB15", "E25:H29"])
+        new_sheet.batch_clear(["C3:L12", "S3:AB12", "C13:L15", "S13:AB15", "E25:I30"])
 
     away_rgb      = hex_to_rgb(game["away_color"])
     away_text_rgb = get_readable_text_color(game["away_color"], game.get("away_alt_color"))
@@ -671,7 +671,7 @@ def create_game_tab(sh, grid_format, winners, cost, rake_pct, sport, game, game1
                     "range": {"sheetId": new_sheet_id, "startRowIndex": 12, "endRowIndex": payout_end_row, "startColumnIndex": col_start, "endColumnIndex": col_end},
                     "cell": {"userEnteredFormat": {
                         "backgroundColor": yellow_rgb,
-                        "textFormat": {"foregroundColor": black_rgb, "bold": True, "fontSize": 10},
+                        "textFormat": {"foregroundColor": black_rgb, "bold": True, "fontSize": 15},
                         "horizontalAlignment": "CENTER",
                         "verticalAlignment": "MIDDLE",
                         "borders": {"top": solid, "bottom": solid, "left": solid, "right": solid}
